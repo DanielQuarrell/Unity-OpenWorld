@@ -6,9 +6,8 @@ public class WorldChunk : MonoBehaviour
 {
     [SerializeField] GameObject model;
 
-    // Update is called once per frame
-    void Update()
+    public void SetModelActive(bool active)
     {
-        model.SetActive(Vector3.Distance(this.transform.position, Player.instance.transform.position) < 10);
+        model.SetActive(active);
     }
 }
