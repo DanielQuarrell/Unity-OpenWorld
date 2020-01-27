@@ -17,7 +17,20 @@ public class WorldChunkLoader : MonoBehaviour
             vectorDistance.y = 0;
             float distanceToPlayer = vectorDistance.magnitude;
 
-            chunk.SetModelActive(distanceToPlayer < distanceToLoadChunk);
+            if (distanceToPlayer < distanceToLoadChunk)
+            {
+                if (!chunk.IsChunkActive())
+                {
+                    chunk.SpawnChunk();
+                }
+            }
+            else
+            {
+                if (chunk.IsChunkActive())
+                {
+                    chunk.UnloadChunk();
+                }
+            }
         }
     }
 }

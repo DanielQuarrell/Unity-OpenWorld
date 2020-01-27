@@ -4,10 +4,32 @@ using UnityEngine;
 
 public class WorldChunk : MonoBehaviour
 {
-    [SerializeField] GameObject model;
+    [SerializeField] int terrainIndex;
 
-    public void SetModelActive(bool active)
+    GameObject terrainObject;
+
+    [SerializeField] bool chunkActive = false;
+
+    public void SpawnChunk()
     {
-        model.SetActive(active);
+        if(!chunkActive)
+        {
+            terrainObject = Instantiate(Resources.Load("TerrainChunks/Terrain " + terrainIndex) as GameObject, this.transform);
+            chunkActive = true;
+        } 
+    }
+
+    public void UnloadChunk()
+    {
+        if (chunkActive)
+        {
+            Destroy(terrainObject);
+            chunkActive = false;
+        }
+    }
+
+    public bool IsChunkActive()
+    {
+        return chunkActive;
     }
 }
