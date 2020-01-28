@@ -9,6 +9,7 @@ public class WorldChunkLoader : MonoBehaviour
 
     [SerializeField] float distanceToLoadChunk = 100;
 
+    /*
     void Update()
     {
         foreach(WorldChunk chunk in chunks)
@@ -33,4 +34,5 @@ public class WorldChunkLoader : MonoBehaviour
             }
         }
     }
+    */
 }
