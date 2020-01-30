@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEditor;
 
 public class SaveLevelToJson : MonoBehaviour
 {
@@ -65,46 +66,15 @@ public class SaveLevelToJson : MonoBehaviour
             chunkData.coordinate = chunk.GetCoordinate();
             chunkData.worldObjects = new List<WorldObjectData>();
 
-            foreach (GameObject objectInChunk in chunk.GetObjectsInChunk())
+            foreach (GameObject chunkObject in chunk.GetObjectsInChunk())
             {
-                if (objectInChunk.GetComponent<Terrain>())
+                if (chunkObject.GetComponent<Terrain>())
                 {
-                    TerrainObjectData terrainObject = new TerrainObjectData();
-
-                    terrainObject.terrainName = objectInChunk.GetComponent<Terrain>().terrainData.name;
-
-                    terrainObject.terrainLayers = new List<string>();
-                    foreach (TerrainLayer layer in objectInChunk.GetComponent<Terrain>().terrainData.terrainLayers)
-                    {
-                        string layerString = layer.name;
-                        terrainObject.terrainLayers.Add(layer.name);
-                    }
-
-                    chunkData.terrainObject = terrainObject;
+                    chunkData.terrainObject = ProcessTerrain(chunkObject);
                 }
                 else
                 {
-                    WorldObjectData worldObject = new WorldObjectData();
-
-                    worldObject.objectName = objectInChunk.name;
-                    worldObject.position = objectInChunk.transform.position;
-                    worldObject.rotation = objectInChunk.transform.rotation;
-                    worldObject.scale = objectInChunk.transform.localScale;
-
-                    if (objectInChunk.GetComponent<MeshRenderer>())
-                    {
-                        string modelString = objectInChunk.GetComponent<MeshFilter>().sharedMesh.name;
-                        worldObject.model = modelString.Replace(" Instance", "");
-
-                        worldObject.materials = new List<string>();
-                        foreach (Material mat in objectInChunk.GetComponent<MeshRenderer>().sharedMaterials)
-                        {
-                            string matString = mat.name;
-                            worldObject.materials.Add(matString.Replace(" (Instance)", ""));
-                        }
-                    }
-
-                    chunkData.worldObjects.Add(worldObject);
+                    chunkData.worldObjects.Add(ProcessChunkObject(chunkObject, false));
                 }
             }
 
@@ -116,5 +86,71 @@ public class SaveLevelToJson : MonoBehaviour
         data = JsonUtility.ToJson(worldData, true);
         File.WriteAllText(Application.persistentDataPath + "/worldJSON.json", data);
         Debug.Log("Saved world to: " + Application.persistentDataPath + "/worldJSON.json");
+    }
+
+    TerrainObjectData ProcessTerrain(GameObject chunkObject)
+    {
+        TerrainObjectData terrainObject = new TerrainObjectData();
+
+        terrainObject.terrainName = chunkObject.GetComponent<Terrain>().terrainData.name;
+
+        terrainObject.terrainLayers = new List<string>();
+        foreach (TerrainLayer layer in chunkObject.GetComponent<Terrain>().terrainData.terrainLayers)
+        {
+            string layerString = layer.name;
+            terrainObject.terrainLayers.Add(layer.name);
+        }
+
+        return terrainObject;
+    }
+
+    WorldObjectData ProcessChunkObject(GameObject chunkObject, bool childObject)
+    {
+        WorldObjectData worldObject = new WorldObjectData();
+
+        worldObject.objectName = chunkObject.name;
+        worldObject.position = childObject ? chunkObject.transform.localPosition : chunkObject.transform.position;
+        worldObject.rotation = childObject ? chunkObject.transform.localRotation : chunkObject.transform.rotation;
+        worldObject.scale = chunkObject.transform.localScale;
+
+        if (chunkObject.GetComponent<MeshRenderer>())
+        {
+            worldObject.hadModel = true;
+
+            Mesh mesh = chunkObject.GetComponent<MeshFilter>().sharedMesh;
+
+            if(AssetDatabase.IsSubAsset(mesh.GetInstanceID()))
+            {
+                string modelString = chunkObject.transform.parent.name;
+                worldObject.model = modelString.Replace(" Instance", "");
+            }
+            else
+            {
+                string modelString = mesh.name;
+                worldObject.model = modelString.Replace(" Instance", "");
+            }
+
+            string meshString = mesh.name;
+            worldObject.mesh = meshString.Replace(" Instance", "");
+
+            worldObject.materials = new List<string>();
+            foreach (Material mat in chunkObject.GetComponent<MeshRenderer>().sharedMaterials)
+            {
+                string matString = mat.name;
+                worldObject.materials.Add(matString.Replace(" (Instance)", ""));
+            }
+        }
+        else
+        {
+            worldObject.hadModel = false;
+        }
+
+        worldObject.childObjects = new List<WorldObjectData>();
+        foreach (Transform child in chunkObject.transform)
+        {
+            worldObject.childObjects.Add(ProcessChunkObject(child.gameObject, true));
+        }
+
+        return worldObject;
     }
 }

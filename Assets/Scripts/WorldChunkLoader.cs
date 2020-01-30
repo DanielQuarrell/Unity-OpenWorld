@@ -10,11 +10,30 @@ public class WorldChunkLoader : MonoBehaviour
 
     [SerializeField] float distanceToLoadChunk = 100;
 
-    private void Start()
+    void Update()
     {
         foreach (WorldChunk chunk in chunks)
         {
-            LoadChunk(chunk);
+            Vector3 vectorDistance = player.transform.position - chunk.transform.position;
+            vectorDistance.y = 0;
+            float distanceToPlayer = vectorDistance.magnitude;
+
+            if (distanceToPlayer < distanceToLoadChunk)
+            {
+                if (!chunk.IsChunkActive())
+                {
+                    chunk.SetChunkActive(true);
+                    LoadChunk(chunk);
+                }
+            }
+            else
+            {
+                if (chunk.IsChunkActive())
+                {
+                    chunk.SetChunkActive(false);
+                    chunk.Unload();
+                }
+            }
         }
     }
 
@@ -34,32 +53,56 @@ public class WorldChunkLoader : MonoBehaviour
 
                     foreach (WorldObjectData worldObjectData in chunkData.worldObjects)
                     {
-                        GameObject worldObject;
-                        worldObject = new GameObject(worldObjectData.objectName);
-                        worldObject.AddComponent<MeshFilter>();
-                        worldObject.AddComponent<MeshRenderer>();
-
-                        Mesh mesh = Resources.Load("3D_Models/" + worldObjectData.model, typeof(Mesh)) as Mesh;
-                        worldObject.GetComponent<MeshFilter>().sharedMesh = mesh;
-
-                        List<Material> objectMaterials = new List<Material>();
-                        for (int i = 0; i < worldObjectData.materials.Count; i++)
-                        {
-                            Material material = Resources.Load("Materials/" + worldObjectData.materials[i]) as Material;
-                            objectMaterials.Add(material);
-                        }
-
-                        worldObject.GetComponent<MeshRenderer>().sharedMaterials = objectMaterials.ToArray();
-
-                        worldObject.transform.position = worldObjectData.position;
-                        worldObject.transform.rotation = worldObjectData.rotation;
-                        worldObject.transform.localScale = worldObjectData.scale;
-
-                        chunk.AddObject(worldObject);
+                        chunk.AddObject(LoadWorldObject(worldObjectData));
                     }
                 }
             }
         }
+    }
+
+    GameObject LoadWorldObject(WorldObjectData worldObjectData)
+    {
+        GameObject worldObject;
+        worldObject = new GameObject(worldObjectData.objectName);
+
+        foreach (WorldObjectData childObjectData in worldObjectData.childObjects)
+        {
+            LoadWorldObject(childObjectData).transform.SetParent(worldObject.transform);
+        }
+
+        if(worldObjectData.hadModel)
+        {
+            worldObject.AddComponent<MeshFilter>();
+            worldObject.AddComponent<MeshRenderer>();
+            worldObject.AddComponent<MeshCollider>();
+
+            Mesh mesh = new Mesh();
+            foreach (Mesh subMesh in Resources.LoadAll<Mesh>("3D_Models/" + worldObjectData.model))
+            {
+                if (subMesh.name == worldObjectData.mesh)
+                {
+                    mesh = subMesh;
+                }
+            }
+            
+            worldObject.GetComponent<MeshFilter>().sharedMesh = mesh;
+            worldObject.GetComponent<MeshCollider>().sharedMesh = mesh;
+
+            List<Material> objectMaterials = new List<Material>();
+            for (int i = 0; i < worldObjectData.materials.Count; i++)
+            {
+                Material material = Resources.Load("Materials/" + worldObjectData.materials[i]) as Material;
+                objectMaterials.Add(material);
+            }
+
+            worldObject.GetComponent<MeshRenderer>().sharedMaterials = objectMaterials.ToArray();
+        }
+
+        worldObject.transform.position = worldObjectData.position;
+        worldObject.transform.rotation = worldObjectData.rotation;
+        worldObject.transform.localScale = worldObjectData.scale;
+
+        return worldObject;
     }
 
     GameObject LoadTerrain(ChunkData chunkData)
@@ -90,31 +133,4 @@ public class WorldChunkLoader : MonoBehaviour
 
         return terrainObject;
     }
-
-    /*
-    void Update()
-    {
-        foreach(WorldChunk chunk in chunks)
-        {
-            Vector3 vectorDistance = player.transform.position - chunk.transform.position;
-            vectorDistance.y = 0;
-            float distanceToPlayer = vectorDistance.magnitude;
-
-            if (distanceToPlayer < distanceToLoadChunk)
-            {
-                if (!chunk.IsChunkActive())
-                {
-                    chunk.SpawnChunk();
-                }
-            }
-            else
-            {
-                if (chunk.IsChunkActive())
-                {
-                    chunk.UnloadChunk();
-                }
-            }
-        }
-    }
-    */
 }

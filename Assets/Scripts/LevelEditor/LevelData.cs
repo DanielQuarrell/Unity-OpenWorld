@@ -10,9 +10,12 @@ public class WorldObjectData
     public Quaternion rotation;
     public Vector3 scale;
 
+    public bool hadModel;
     public string model;
-
+    public string mesh;
     public List<string> materials;
+
+    public List<WorldObjectData> childObjects;
 }
 
 [System.Serializable]

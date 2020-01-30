@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,8 +8,8 @@ public class WorldChunk : MonoBehaviour
     List<GameObject> objectsInChunk;
     
     GameObject terrainObject;
-
-    [SerializeField] bool chunkActive = false;
+    
+    bool chunkActive = false;
 
     private void Awake()
     {
@@ -30,6 +31,16 @@ public class WorldChunk : MonoBehaviour
         terrainObject = newTerrainObject;
         terrainObject.transform.SetParent(this.transform);
         terrainObject.transform.localPosition = new Vector3(-16, 0, -16);
+    }
+
+    public void SetChunkActive(bool active)
+    {
+        chunkActive = active;
+    }
+
+    public bool IsChunkActive()
+    {
+        return chunkActive;
     }
 
     public void AddObject(GameObject newObject)
@@ -70,16 +81,16 @@ public class WorldChunk : MonoBehaviour
         return worldPosition.x <= worldObject.position.x && worldObject.position.x <= worldPosition.x + 32 &&
                worldPosition.z <= worldObject.position.z && worldObject.position.z <= worldPosition.z + 32;
     }
-        
 
-    /*
-    public void SpawnChunk()
+    public void Unload()
     {
-        if(!chunkActive)
+        Destroy(terrainObject);
+
+        foreach (GameObject worldObject in objectsInChunk)
         {
-            terrainObject = Instantiate(Resources.Load("TerrainChunks/Terrain " + terrainIndex) as GameObject, this.transform);
-            chunkActive = true;
-        } 
+            Destroy(worldObject);
+        }
+
+        objectsInChunk.Clear();
     }
-    */
 }
