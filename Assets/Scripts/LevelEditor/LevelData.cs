@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [System.Serializable]
-public class WorldObject
+public class WorldObjectData
 {
     public string objectName;
     public Vector3 position;
@@ -16,10 +16,10 @@ public class WorldObject
 }
 
 [System.Serializable]
-public class TerrainObject
+public class TerrainObjectData
 {
     public string terrainName;
-    public string terrainLayer;
+    public List<string> terrainLayers;
 }
 
 [System.Serializable]
@@ -27,8 +27,8 @@ public class ChunkData
 {
     public Vector2 coordinate;
 
-    public List<WorldObject> worldObjects;
-    public TerrainObject terrainObject;
+    public List<WorldObjectData> worldObjects;
+    public TerrainObjectData terrainObject;
 }
 
 [System.Serializable]
