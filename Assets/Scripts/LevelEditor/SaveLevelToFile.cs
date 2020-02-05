@@ -1,10 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using UnityEngine;
 using UnityEditor;
 
-public class SaveLevelToJson : MonoBehaviour
+
+public class SaveLevelToFile: MonoBehaviour
 {
     [SerializeField] GameObject world;
     [SerializeField] List<WorldChunk> chunks;
@@ -63,7 +65,7 @@ public class SaveLevelToJson : MonoBehaviour
         foreach (WorldChunk chunk in chunks)
         {
             ChunkData chunkData = new ChunkData();
-            chunkData.coordinate = chunk.GetCoordinate();
+            chunkData.coordinate = new SerializableVector2(chunk.GetCoordinate());
             chunkData.worldObjects = new List<WorldObjectData>();
 
             foreach (GameObject chunkObject in chunk.GetObjectsInChunk())
@@ -81,24 +83,50 @@ public class SaveLevelToJson : MonoBehaviour
             worldData.chunks.Add(chunkData);
         }
 
-        // Write the text to save data.
-        string data = string.Empty;
-        data = JsonUtility.ToJson(worldData, true);
-        File.WriteAllText(Application.persistentDataPath + "/worldJSON.json", data);
-        Debug.Log("Saved world to: " + Application.persistentDataPath + "/worldJSON.json");
+        SaveToBinary();
     }
 
     TerrainObjectData ProcessTerrain(GameObject chunkObject)
     {
         TerrainObjectData terrainObject = new TerrainObjectData();
 
+        Terrain terrainChunk = chunkObject.GetComponent<Terrain>();
+
         terrainObject.terrainName = chunkObject.GetComponent<Terrain>().terrainData.name;
 
-        terrainObject.terrainLayers = new List<string>();
+        terrainObject.heightmapHeight = terrainChunk.terrainData.heightmapHeight;
+        terrainObject.heightmapWidth = terrainChunk.terrainData.heightmapWidth;
+        terrainObject.heightmapResolution = terrainChunk.terrainData.heightmapResolution;
+        terrainObject.terrainSize = new SerializableVector3(terrainChunk.terrainData.size);
+
+        terrainObject.alphamapLayers = terrainChunk.terrainData.alphamapLayers;
+        terrainObject.alphamapResolution = terrainChunk.terrainData.alphamapResolution;
+        terrainObject.alphamapHeight = terrainChunk.terrainData.alphamapHeight;
+        terrainObject.alphamapWidth = terrainChunk.terrainData.alphamapWidth;
+
+        float[,] heightData = terrainChunk.terrainData.GetHeights(0, 0, terrainChunk.terrainData.heightmapWidth, terrainChunk.terrainData.heightmapHeight);
+        terrainObject.terrainHeightData = new float[terrainChunk.terrainData.heightmapWidth * terrainChunk.terrainData.heightmapHeight];
+
+        int heightIndex = 0;
+
+        for (int i = 0; i < terrainChunk.terrainData.heightmapWidth; i++)
+        {
+            for (int j = 0; j < terrainChunk.terrainData.heightmapHeight; j++)
+            {
+                terrainObject.terrainHeightData[heightIndex] = heightData[i, j];
+                heightIndex++;
+            }
+        }
+
+        terrainObject.terrainLayers = new List<TerrainLayerData>();
         foreach (TerrainLayer layer in chunkObject.GetComponent<Terrain>().terrainData.terrainLayers)
         {
-            string layerString = layer.name;
-            terrainObject.terrainLayers.Add(layer.name);
+            TerrainLayerData terrainLayerData = new TerrainLayerData();
+            terrainLayerData.diffuseTexture = layer.diffuseTexture.name;
+            terrainLayerData.size = new SerializableVector2(layer.tileSize);
+            terrainLayerData.offset = new SerializableVector2(layer.tileOffset);
+
+            terrainObject.terrainLayers.Add(terrainLayerData);
         }
 
         return terrainObject;
@@ -109,9 +137,9 @@ public class SaveLevelToJson : MonoBehaviour
         WorldObjectData worldObject = new WorldObjectData();
 
         worldObject.objectName = chunkObject.name;
-        worldObject.position = childObject ? chunkObject.transform.localPosition : chunkObject.transform.position;
-        worldObject.rotation = childObject ? chunkObject.transform.localRotation : chunkObject.transform.rotation;
-        worldObject.scale = chunkObject.transform.localScale;
+        worldObject.position = new SerializableVector3(childObject ? chunkObject.transform.localPosition : chunkObject.transform.position);
+        worldObject.rotation = new SerializableQuaternion(childObject ? chunkObject.transform.localRotation : chunkObject.transform.rotation);
+        worldObject.scale = new SerializableVector3(chunkObject.transform.localScale);
 
         if (chunkObject.GetComponent<MeshRenderer>())
         {
@@ -119,7 +147,7 @@ public class SaveLevelToJson : MonoBehaviour
 
             Mesh mesh = chunkObject.GetComponent<MeshFilter>().sharedMesh;
 
-            if(AssetDatabase.IsSubAsset(mesh.GetInstanceID()))
+            if(AssetDatabase.IsSubAsset(mesh.GetInstanceID()) && chunkObject.transform.parent.name != "Chunk")
             {
                 string modelString = chunkObject.transform.parent.name;
                 worldObject.model = modelString.Replace(" Instance", "");
@@ -153,4 +181,24 @@ public class SaveLevelToJson : MonoBehaviour
 
         return worldObject;
     }
+
+    void SaveToBinary()
+    {
+        // Write the text to save data.
+        BinaryFormatter bf = new BinaryFormatter();
+        FileStream file = File.Create(Application.persistentDataPath + "/worldData.dat");
+        bf.Serialize(file, worldData);
+        file.Close();
+        Debug.Log("Saved world to: " + Application.persistentDataPath + "/worldData.dat");
+    }
+
+    /*
+    void SaveToJson()
+    {
+        string data = string.Empty;
+        data = JsonUtility.ToJson(worldData, true);
+        File.WriteAllText(Application.persistentDataPath + "/worldJSON.json", data);
+        Debug.Log("Saved world to: " + Application.persistentDataPath + "/worldJSON.json");
+    }
+    */
 }
