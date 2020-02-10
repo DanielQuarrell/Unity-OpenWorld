@@ -184,21 +184,10 @@ public class SaveLevelToFile: MonoBehaviour
 
     void SaveToBinary()
     {
-        // Write the text to save data.
         BinaryFormatter bf = new BinaryFormatter();
         FileStream file = File.Create(Application.persistentDataPath + "/worldData.dat");
         bf.Serialize(file, worldData);
         file.Close();
         Debug.Log("Saved world to: " + Application.persistentDataPath + "/worldData.dat");
     }
-
-    /*
-    void SaveToJson()
-    {
-        string data = string.Empty;
-        data = JsonUtility.ToJson(worldData, true);
-        File.WriteAllText(Application.persistentDataPath + "/worldJSON.json", data);
-        Debug.Log("Saved world to: " + Application.persistentDataPath + "/worldJSON.json");
-    }
-    */
 }

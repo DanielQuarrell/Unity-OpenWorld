@@ -22,3 +22,23 @@ public class LevelEditorButtons : Editor
         }
     }
 }
+
+[CustomEditor(typeof(SaveLevelToJson))]
+public class LevelEditorButtonsExtra : Editor
+{
+    public override void OnInspectorGUI()
+    {
+        DrawDefaultInspector();
+
+        SaveLevelToJson saveLevelToJson = (SaveLevelToJson)target;
+        if (GUILayout.Button("Save Level"))
+        {
+            saveLevelToJson.Save();
+        }
+
+        if (GUILayout.Button("Sort Level"))
+        {
+            saveLevelToJson.SortObjectsIntoWorld();
+        }
+    }
+}
