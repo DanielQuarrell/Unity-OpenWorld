@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEditor;
 
 
@@ -143,7 +144,7 @@ public class SaveLevelToJson: MonoBehaviour
 
         if (chunkObject.GetComponent<MeshRenderer>())
         {
-            worldObject.hadModel = true;
+            worldObject.hasModel = true;
 
             Mesh mesh = chunkObject.GetComponent<MeshFilter>().sharedMesh;
 
@@ -170,7 +171,21 @@ public class SaveLevelToJson: MonoBehaviour
         }
         else
         {
-            worldObject.hadModel = false;
+            worldObject.hasModel = false;
+        }
+
+        if (chunkObject.GetComponent<NavMeshModifierVolume>())
+        {
+            worldObject.isNavMeshObstacle = true;
+
+            NavMeshModifierVolume navMeshModifierVolume = chunkObject.GetComponent<NavMeshModifierVolume>();
+
+            worldObject.size = new SerializableVector3(navMeshModifierVolume.size);
+            worldObject.center = new SerializableVector3(navMeshModifierVolume.center);
+        }
+        else
+        {
+            worldObject.isNavMeshObstacle = false;
         }
 
         worldObject.childObjects = new List<WorldObjectData>();

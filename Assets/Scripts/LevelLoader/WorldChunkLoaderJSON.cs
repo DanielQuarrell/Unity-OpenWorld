@@ -159,7 +159,7 @@ public class WorldChunkLoaderJSON : MonoBehaviour
         worldObject = new GameObject(worldObjectData.objectName);
 
         //Load mesh if it has one
-        if (worldObjectData.hadModel)
+        if (worldObjectData.hasModel)
         {
             worldObject.AddComponent<MeshFilter>();
             worldObject.AddComponent<MeshRenderer>();

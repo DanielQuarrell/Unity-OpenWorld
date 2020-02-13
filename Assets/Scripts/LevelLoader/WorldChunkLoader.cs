@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.AI;
 using System.Runtime.Serialization.Formatters.Binary;
 
 public class WorldChunkLoader : MonoBehaviour
 {
     [SerializeField] GameObject player;
+    [SerializeField] NavMeshSurface navMeshSurface;
     [SerializeField] WorldChunk[] chunks;
 
     [SerializeField] float distanceToLoadChunk = 100;
@@ -152,6 +154,9 @@ public class WorldChunkLoader : MonoBehaviour
         terrainObject.GetComponent<Terrain>().terrainData = terrainData;
         terrainObject.GetComponent<TerrainCollider>().terrainData = terrainData;
 
+        //Add it as a source tag for the navMesh
+        terrainObject.AddComponent<NavMeshSourceTag>();
+
         //Add terrain to chunk
         chunk.SetTerrain(terrainObject);
 
@@ -165,7 +170,7 @@ public class WorldChunkLoader : MonoBehaviour
         worldObject = new GameObject(worldObjectData.objectName);
 
         //Load mesh if it has one
-        if(worldObjectData.hadModel)
+        if(worldObjectData.hasModel)
         {
             worldObject.AddComponent<MeshFilter>();
             worldObject.AddComponent<MeshRenderer>();
@@ -196,6 +201,17 @@ public class WorldChunkLoader : MonoBehaviour
             worldObject.GetComponent<MeshFilter>().sharedMesh = mesh;
             worldObject.GetComponent<MeshCollider>().sharedMesh = mesh;
             worldObject.GetComponent<MeshRenderer>().sharedMaterials = objectMaterials.ToArray();
+
+            //Add it as a source tag for the navMesh
+            worldObject.AddComponent<NavMeshSourceTag>();
+        }
+
+        if(worldObjectData.isNavMeshObstacle)
+        {
+            worldObject.AddComponent<NavMeshObstacle>();
+            worldObject.GetComponent<NavMeshObstacle>().size = worldObjectData.size.vector3;
+            worldObject.GetComponent<NavMeshObstacle>().center = worldObjectData.center.vector3;
+            worldObject.GetComponent<NavMeshObstacle>().carving = true;
         }
 
         //Loop through and create child objects first
@@ -219,5 +235,34 @@ public class WorldChunkLoader : MonoBehaviour
             //Add object to chunk;
             chunk.AddObject(worldObject);
         }
+    }
+
+    IEnumerator BuildNavmesh(NavMeshSurface surface)
+    {
+        // get the data for the surface
+        var data = InitializeBakeData(surface);
+
+        // start building the navmesh
+        var async = surface.UpdateNavMesh(data);
+
+        // wait until the navmesh has finished baking
+        yield return async;
+
+        Debug.Log("finished");
+
+        // you need to save the baked data back into the surface
+        surface.navMeshData = data;
+
+        // call AddData() to finalize it
+        surface.AddData();
+    }
+
+    // creates the navmesh data
+    private NavMeshData InitializeBakeData(NavMeshSurface surface)
+    {
+        var emptySources = new List<NavMeshBuildSource>();
+        var emptyBounds = new Bounds();
+
+        return NavMeshBuilder.BuildNavMeshData(surface.GetBuildSettings(), emptySources, emptyBounds, surface.transform.position, surface.transform.rotation);
     }
 }

@@ -97,10 +97,14 @@ public class WorldObjectData
     public SerializableQuaternion rotation;
     public SerializableVector3 scale;
 
-    public bool hadModel;
+    public bool hasModel;
     public string model;
     public string mesh;
     public List<string> materials;
+
+    public bool isNavMeshObstacle;
+    public SerializableVector3 size;
+    public SerializableVector3 center;
 
     public List<WorldObjectData> childObjects;
 }
