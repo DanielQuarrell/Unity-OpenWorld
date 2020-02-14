@@ -18,6 +18,7 @@ public class WorldNavMeshBuilder : MonoBehaviour
         while (true)
         {
             UpdateNavMesh(true);
+            //yield return new WaitWhile(() => m_Operation.isDone == false);
             yield return m_Operation;
             yield return new WaitForSeconds(1);
         }
