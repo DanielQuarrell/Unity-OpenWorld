@@ -14,22 +14,21 @@ public class EnemyController : MonoBehaviour
 
     EnemyState currentState;
     NavMeshAgent agent;
-    Animator animator;
-
-    GameObject player;
+    [HideInInspector] public Animator animator;
 
     [SerializeField] private float attackingRange = 20;
     [SerializeField] private float exploringRange = 30; 
     [SerializeField] private float idleTime = 4f;
 
     private float idleTimer = 0f;
+    private bool canDealDamage;
+    private int health = 2;
+    private bool dead;
 
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
-
-        player = GameObject.FindWithTag("Player");
     }
 
     private void Start()
@@ -39,39 +38,31 @@ public class EnemyController : MonoBehaviour
 
     private void Update()
     {
-        if(PlayerInRange())
+        if(!dead)
         {
-            currentState = EnemyState.CHASING;
+            if (PlayerInRange())
+            {
+                currentState = EnemyState.CHASING;
+            }
+
+            switch (currentState)
+            {
+                case EnemyState.IDLE:
+                    IdleState();
+                    break;
+
+                case EnemyState.ROAMING:
+                    RoamingState();
+                    break;
+
+                case EnemyState.CHASING:
+                    ChasingState();
+                    break;
+            }
+
+            animator.SetFloat("Velocity", agent.velocity.magnitude);
+            animator.SetFloat("AnimationSpeed", agent.velocity.magnitude / agent.speed);
         }
-
-        switch (currentState)
-        {
-            case EnemyState.IDLE:
-                IdleState();
-                break;
-
-            case EnemyState.ROAMING:
-                RoamingState();
-                break;
-
-            case EnemyState.CHASING:
-                ChasingState();
-                break;
-        }
-
-        if (Input.GetKeyDown(KeyCode.H))
-        {
-            animator.SetTrigger("Impact");
-        }
-
-        if (Input.GetKeyDown(KeyCode.J))
-        {
-            animator.SetBool("TriggerDeath", true);
-            animator.SetBool("Dead", true);
-        }
-
-        animator.SetFloat("Velocity", agent.velocity.magnitude);
-        animator.SetFloat("AnimationSpeed", agent.velocity.magnitude / agent.speed);
     }
 
     private void EnterIdle()
@@ -119,7 +110,7 @@ public class EnemyController : MonoBehaviour
 
     private bool PlayerInRange()
     {
-        float distance = Vector3.Distance(player.transform.position, this.transform.position);
+        float distance = Vector3.Distance(Player.instance.transform.position, this.transform.position);
 
         bool inRange = distance < attackingRange;
 
@@ -130,12 +121,12 @@ public class EnemyController : MonoBehaviour
     {
         RaycastHit hit;
 
-        Vector3 playerSight = player.transform.position + Vector3.up;
+        Vector3 playerSight = Player.instance.transform.position + Vector3.up;
         Vector3 enemySight = this.transform.position + Vector3.up;
 
         if (Physics.Linecast(enemySight, playerSight, out hit))
         {
-            if (hit.transform == player.transform)
+            if (hit.transform == Player.instance.transform)
             {
                 Debug.DrawLine(enemySight, playerSight, Color.green);
                 return true;
@@ -154,14 +145,46 @@ public class EnemyController : MonoBehaviour
     {
         if (PlayerInRange())
         {
-            currentState = EnemyState.IDLE;
+            EnterIdle();
         }
 
-        agent.SetDestination(player.transform.position);
+        agent.SetDestination(Player.instance.transform.position);
 
-        if(agent.remainingDistance < 2)
+        if(agent.remainingDistance < 2 && !animator.GetBool("Attacking"))
         {
+            agent.isStopped = true;
             animator.SetTrigger("Attack");
+            canDealDamage = true;
+        }
+        else if(agent.isStopped)
+        {
+            agent.isStopped = false;
+        }
+    }
+
+    public void DealDamage(int damage)
+    {
+        if (health > 0)
+        {
+            health -= damage;
+            animator.SetTrigger("Impact");
+
+            if (health <= 0)
+            {
+                dead = true;
+                agent.enabled = false;
+                animator.SetBool("TriggerDeath", true);
+                animator.SetBool("Dead", true);
+            }
+        }
+    }
+
+    public void OnSwordCollision(Player player)
+    {
+        if(canDealDamage)
+        {
+            player.DealDamage(1);
+            canDealDamage = false;
         }
     }
 }

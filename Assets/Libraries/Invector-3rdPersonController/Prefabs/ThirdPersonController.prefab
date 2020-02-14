@@ -422,7 +422,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 28290abb4b71354478a7d30b76d505fd, type: 2}
+  - {fileID: 2100000, guid: 5ef32da8cecfe134ca9160776ce72997, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -499,7 +499,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8285456230370286084}
-  m_Layer: 0
+  - component: {fileID: 58934855959231240}
+  - component: {fileID: 6496286408718638278}
+  m_Layer: 2
   m_Name: Sword_joint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -520,6 +522,32 @@ Transform:
   m_Father: {fileID: 5595273567826147026}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &58934855959231240
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2384912918937791469}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f1d54067fbdea347a135cf28cec98bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  player: {fileID: 996474223260385361}
+--- !u!65 &6496286408718638278
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2384912918937791469}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.30036518, y: 0.09282963, z: 1.0142858}
+  m_Center: {x: 0.07, y: 0, z: 0.32}
 --- !u!1 &2500808359550018973
 GameObject:
   m_ObjectHideFlags: 0
@@ -937,7 +965,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 352ff93b00a09a047936f56e4b7a2a73, type: 2}
+  - {fileID: 2100000, guid: 5ef32da8cecfe134ca9160776ce72997, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1275,6 +1303,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19a158286479fd34ea3850b571b98aff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  animator: {fileID: 0}
 --- !u!95 &4425428723088313500
 Animator:
   serializedVersion: 3
@@ -1318,7 +1347,7 @@ MonoBehaviour:
     walkByDefault: 0
     rotateWithCamera: 0
     walkSpeed: 4
-    runningSpeed: 8
+    runningSpeed: 6
     sprintSpeed: 16
   strafeSpeed:
     movementSmooth: 6
@@ -1333,7 +1362,7 @@ MonoBehaviour:
   jumpAndRotate: 1
   jumpTimer: 0.3
   jumpHeight: 8
-  airSpeed: 15
+  airSpeed: 7
   airSmooth: 6
   extraGravity: -10
   limitFallVelocity: -15
@@ -1942,7 +1971,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 910a31b66a851ce4eaad8cc5e2ebb5b7, type: 2}
+  - {fileID: 2100000, guid: 5ef32da8cecfe134ca9160776ce72997, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2429,7 +2458,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: e650a2091c01d7a4abaf66af47baff86, type: 2}
+  - {fileID: 2100000, guid: 5ef32da8cecfe134ca9160776ce72997, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
