@@ -19,6 +19,7 @@ public class WorldNavMeshBuilder : MonoBehaviour
         {
             UpdateNavMesh(true);
             yield return m_Operation;
+            yield return new WaitForSeconds(1);
         }
     }
 

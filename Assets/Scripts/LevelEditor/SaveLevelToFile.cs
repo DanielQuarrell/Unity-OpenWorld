@@ -178,10 +178,10 @@ public class SaveLevelToFile: MonoBehaviour
         {
             worldObject.isNavMeshObstacle = true;
 
-            NavMeshObstacle navMeshModifierVolume = chunkObject.GetComponent<NavMeshObstacle>();
+            NavMeshObstacle navMeshObstacle = chunkObject.GetComponent<NavMeshObstacle>();
 
-            worldObject.size = new SerializableVector3(navMeshModifierVolume.size);
-            worldObject.center = new SerializableVector3(navMeshModifierVolume.center);
+            worldObject.size = new SerializableVector3(navMeshObstacle.size);
+            worldObject.center = new SerializableVector3(navMeshObstacle.center);
         }
         else
         {

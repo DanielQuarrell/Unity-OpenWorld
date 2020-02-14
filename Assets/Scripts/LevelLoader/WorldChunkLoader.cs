@@ -236,33 +236,4 @@ public class WorldChunkLoader : MonoBehaviour
             chunk.AddObject(worldObject);
         }
     }
-
-    IEnumerator BuildNavmesh(NavMeshSurface surface)
-    {
-        // get the data for the surface
-        var data = InitializeBakeData(surface);
-
-        // start building the navmesh
-        var async = surface.UpdateNavMesh(data);
-
-        // wait until the navmesh has finished baking
-        yield return async;
-
-        Debug.Log("finished");
-
-        // you need to save the baked data back into the surface
-        surface.navMeshData = data;
-
-        // call AddData() to finalize it
-        surface.AddData();
-    }
-
-    // creates the navmesh data
-    private NavMeshData InitializeBakeData(NavMeshSurface surface)
-    {
-        var emptySources = new List<NavMeshBuildSource>();
-        var emptyBounds = new Bounds();
-
-        return NavMeshBuilder.BuildNavMeshData(surface.GetBuildSettings(), emptySources, emptyBounds, surface.transform.position, surface.transform.rotation);
-    }
 }

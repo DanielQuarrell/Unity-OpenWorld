@@ -44,7 +44,7 @@ public class NavMeshSourceTag : MonoBehaviour
     {
         sources.Clear();
 
-        for (var i = 0; i < m_Meshes.Count; ++i)
+        for (int i = 0; i < m_Meshes.Count; ++i)
         {
             MeshFilter mesh = m_Meshes[i];
             if (mesh == null) continue;
