@@ -22,7 +22,7 @@ public class EnemyController : MonoBehaviour
 
     private float idleTimer = 0f;
     private bool canDealDamage;
-    private int health = 2;
+    private int health = 3;
     private bool dead;
 
     private void Awake()
@@ -110,7 +110,7 @@ public class EnemyController : MonoBehaviour
 
     private bool PlayerInRange()
     {
-        float distance = Vector3.Distance(Player.instance.transform.position, this.transform.position);
+        float distance = DistanceFromPlayer();
 
         bool inRange = distance < attackingRange;
 
@@ -141,6 +141,11 @@ public class EnemyController : MonoBehaviour
         return false;
     }
 
+    float DistanceFromPlayer()
+    {
+        return Vector3.Distance(Player.instance.transform.position, this.transform.position);
+    }
+
     private void ChasingState()
     {
         if (PlayerInRange())
@@ -148,17 +153,20 @@ public class EnemyController : MonoBehaviour
             EnterIdle();
         }
 
-        agent.SetDestination(Player.instance.transform.position);
-
-        if(agent.remainingDistance < 2 && !animator.GetBool("Attacking"))
+        if (DistanceFromPlayer() <= 2 && !animator.GetBool("Attacking") && !animator.GetBool("Hit"))
         {
             agent.isStopped = true;
             animator.SetTrigger("Attack");
             canDealDamage = true;
         }
-        else if(agent.isStopped)
+        else if (DistanceFromPlayer() > 2)
         {
-            agent.isStopped = false;
+            if (agent.isStopped)
+            {
+                agent.isStopped = false;
+            }
+
+            agent.SetDestination(Player.instance.transform.position);
         }
     }
 
@@ -167,7 +175,6 @@ public class EnemyController : MonoBehaviour
         if (health > 0)
         {
             health -= damage;
-            animator.SetTrigger("Impact");
 
             if (health <= 0)
             {
@@ -175,6 +182,10 @@ public class EnemyController : MonoBehaviour
                 agent.enabled = false;
                 animator.SetBool("TriggerDeath", true);
                 animator.SetBool("Dead", true);
+            }
+            else
+            {
+                animator.SetTrigger("Impact");
             }
         }
     }

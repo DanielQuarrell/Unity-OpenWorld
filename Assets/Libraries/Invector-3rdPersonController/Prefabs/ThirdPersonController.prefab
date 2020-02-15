@@ -1347,7 +1347,7 @@ MonoBehaviour:
     walkByDefault: 0
     rotateWithCamera: 0
     walkSpeed: 4
-    runningSpeed: 6
+    runningSpeed: 5
     sprintSpeed: 16
   strafeSpeed:
     movementSmooth: 6

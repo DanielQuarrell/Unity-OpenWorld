@@ -1,12 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Invector.vCharacterController;
 
 public class Player : MonoBehaviour
 {
     public static Player instance;
 
     [HideInInspector] public Animator animator;
+
+    vThirdPersonInput thirdPersonInput;
 
     private bool canDealDamage;
     private int health = 6;
@@ -17,6 +20,7 @@ public class Player : MonoBehaviour
         instance = this;
 
         animator = GetComponent<Animator>();
+        thirdPersonInput = GetComponent<vThirdPersonInput>();
     }
 
     private void Update()
@@ -36,6 +40,7 @@ public class Player : MonoBehaviour
 
             if (health <= 0)
             {
+                thirdPersonInput.enabled = false;
                 animator.SetBool("TriggerDeath", true);
                 animator.SetBool("Dead", true);
             }
