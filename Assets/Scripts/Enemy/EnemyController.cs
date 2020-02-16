@@ -16,9 +16,12 @@ public class EnemyController : MonoBehaviour
     NavMeshAgent agent;
     [HideInInspector] public Animator animator;
 
-    [SerializeField] private float attackingRange = 20;
-    [SerializeField] private float exploringRange = 30; 
-    [SerializeField] private float idleTime = 4f;
+    public int id;
+    public Vector2 coordinate;
+
+    public float attackingRange = 20;
+    public float exploringRange = 30; 
+    public float idleTime = 4f;
 
     private float idleTimer = 0f;
     private bool canDealDamage;
@@ -85,8 +88,11 @@ public class EnemyController : MonoBehaviour
 
     private void FindNewLocation()
     {
-        agent.SetDestination(GetRandomPoint(this.transform.position, exploringRange));
-        currentState = EnemyState.ROAMING;
+        if(agent.isOnNavMesh)
+        {
+            agent.SetDestination(GetRandomPoint(this.transform.position, exploringRange));
+            currentState = EnemyState.ROAMING;
+        }
     }
 
     private Vector3 GetRandomPoint(Vector3 center, float maxDistance)
@@ -168,6 +174,21 @@ public class EnemyController : MonoBehaviour
 
             agent.SetDestination(Player.instance.transform.position);
         }
+    }
+
+    public int GetHealth()
+    {
+        return health;
+    }
+
+    public void SetHealth(int _health)
+    {
+        health = _health;
+    }
+
+    public bool IsDead()
+    {
+        return dead;
     }
 
     public void DealDamage(int damage)

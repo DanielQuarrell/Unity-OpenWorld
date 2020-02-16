@@ -10,8 +10,16 @@ public class WorldChunkLoader : MonoBehaviour
     [SerializeField] GameObject player;
     [SerializeField] NavMeshSurface navMeshSurface;
     [SerializeField] WorldChunk[] chunks;
+    [SerializeField] GameObject enemiesHolder;
 
     [SerializeField] float distanceToLoadChunk = 100;
+
+    private List<EnemyController> loadedEnemies;
+
+    private void Awake()
+    {
+        loadedEnemies = new List<EnemyController>();
+    }
 
     void Update()
     {
@@ -34,7 +42,7 @@ public class WorldChunkLoader : MonoBehaviour
                 if (chunk.IsChunkActive())
                 {
                     chunk.SetChunkActive(false);
-                    chunk.Unload();
+                    UnloadChunk(chunk);
                 }
             }
         }
@@ -42,25 +50,101 @@ public class WorldChunkLoader : MonoBehaviour
 
     void LoadChunk(WorldChunk chunk)
     {
-        if (File.Exists(Application.persistentDataPath + "/worldData.dat"))
+        if (File.Exists(Application.persistentDataPath + "/worldData.dat") && File.Exists(Application.persistentDataPath + "/enemiesData.dat"))
         {
-            //Load from binary
+            //Load files from binary
             BinaryFormatter bf = new BinaryFormatter();
-            FileStream file = File.Open(Application.persistentDataPath + "/worldData.dat", FileMode.Open);
-            WorldData worldData = (WorldData)bf.Deserialize(file);
-            file.Close();
 
-            //Load from JSON
-            //string data = File.ReadAllText(Application.persistentDataPath + "/worldData.dat");
-            //WorldData worldData = JsonUtility.FromJson<WorldData>(data);
+            FileStream worldFile = File.Open(Application.persistentDataPath + "/worldData.dat", FileMode.Open);
+            WorldData worldData = (WorldData)bf.Deserialize(worldFile);
+            worldFile.Close();
+
+            FileStream enemiesFile = File.Open(Application.persistentDataPath + "/enemiesData.dat", FileMode.Open);
+            WorldEnemyData worldEnemyData = (WorldEnemyData)bf.Deserialize(enemiesFile);
+            enemiesFile.Close();
 
             foreach (ChunkData chunkData in worldData.chunks)
             {
                 if (chunkData.coordinate.vector2 == chunk.GetCoordinate())
                 {
-                    IEnumerator loadChunkAsync = LoadChunkAsync(chunk, chunkData);
-                    StartCoroutine(loadChunkAsync);
+                    StartCoroutine(LoadChunkAsync(chunk, chunkData));
+                    StartCoroutine(LoadEnemies(chunk, worldEnemyData));
                 }
+            }
+        }
+    }
+
+    void UnloadChunk(WorldChunk chunk)
+    {
+        if (File.Exists(Application.persistentDataPath + "/enemiesData.dat"))
+        {
+            //Load enemy file
+            BinaryFormatter bf = new BinaryFormatter();
+
+            FileStream readFile = File.Open(Application.persistentDataPath + "/enemiesData.dat", FileMode.Open);
+            WorldEnemyData worldEnemyData = (WorldEnemyData)bf.Deserialize(readFile);
+            readFile.Close();
+
+            if(loadedEnemies != null)
+            {
+                List<EnemyController> enemiesToRemove = new List<EnemyController>();
+
+                foreach (EnemyController enemy in loadedEnemies)
+                {
+                    if(chunk.ObjectInChunk(enemy.transform))
+                    {
+                        //Rewrite the enemy data with the loaded enemy
+                        OverideEnemy(ref worldEnemyData, enemy, chunk.GetCoordinate());
+
+                        enemiesToRemove.Add(enemy);
+                    }
+                }
+
+                foreach (EnemyController enemy in enemiesToRemove)
+                {
+                    loadedEnemies.Remove(enemy);
+                    Destroy(enemy.gameObject);
+                }
+            }
+
+            //Overwrite enemy file
+            FileStream overwriteFile = File.Open(Application.persistentDataPath + "/enemiesData.dat", FileMode.Open);
+            bf.Serialize(overwriteFile, worldEnemyData);
+            overwriteFile.Close();
+        }
+
+        //Remove loaded objects
+        chunk.Unload();
+    }
+
+    bool IsEnemyLoaded(int id)
+    {
+        foreach (EnemyController loadedEnemy in loadedEnemies)
+        {
+            if(loadedEnemy.id == id)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    void OverideEnemy(ref WorldEnemyData worldEnemyData, EnemyController enemyInChunk, Vector2 coordinate)
+    {
+        //Ensure it rewrites the same enemy
+        for (int i = 0; i < worldEnemyData.enemies.Count; i++)
+        {
+            if(worldEnemyData.enemies[i].id == enemyInChunk.id)
+            {
+                worldEnemyData.enemies[i].coordinate = new SerializableVector2(coordinate);
+
+                worldEnemyData.enemies[i].position = new SerializableVector3(enemyInChunk.transform.position);
+                worldEnemyData.enemies[i].rotation = new SerializableQuaternion(enemyInChunk.transform.rotation);
+                worldEnemyData.enemies[i].scale = new SerializableVector3(enemyInChunk.transform.localScale);
+
+                worldEnemyData.enemies[i].dead = enemyInChunk.IsDead();
+                worldEnemyData.enemies[i].health = enemyInChunk.GetHealth();
             }
         }
     }
@@ -235,5 +319,49 @@ public class WorldChunkLoader : MonoBehaviour
             //Add object to chunk;
             chunk.AddObject(worldObject);
         }
+    }
+
+    IEnumerator LoadEnemies(WorldChunk chunk, WorldEnemyData worldEnemyData)
+    {
+        //Find enemies in chunk
+        foreach (EnemyData enemyData in worldEnemyData.enemies)
+        {
+            if (enemyData.coordinate.vector2 == chunk.GetCoordinate())
+            {
+                //If the enemy is not loaded, then spawn the enemy
+                if (!IsEnemyLoaded(enemyData.id) && !enemyData.dead)
+                {
+                    yield return StartCoroutine(LoadEnemy(enemyData));
+                }
+            }
+        }
+    }
+
+    IEnumerator LoadEnemy(EnemyData enemyData)
+    {
+        //Load enemy prefab
+        ResourceRequest request = Resources.LoadAsync<GameObject>("Enemies/" + enemyData.prefabName);
+        yield return new WaitWhile(() => request.isDone == false);
+        GameObject enemyObject = Instantiate(request.asset as GameObject, enemiesHolder.transform);
+        EnemyController enemy = enemyObject.GetComponent<EnemyController>();
+
+        enemy.id = enemyData.id;
+        enemy.coordinate = enemyData.coordinate.vector2;
+
+        enemy.transform.position = enemyData.position.vector3;
+        enemy.transform.rotation = enemyData.rotation.quaternion;
+        enemy.transform.localScale = enemyData.spawnScale.vector3;
+
+        NavMeshAgent enemyAgent = enemy.GetComponent<NavMeshAgent>();
+
+        enemy.SetHealth(enemyData.health);
+
+        enemyAgent.speed = enemyData.speed;
+        enemy.attackingRange = enemyData.attackingRange;
+        enemy.exploringRange = enemyData.exploringRange;
+        enemy.idleTime = enemyData.idleTime;
+
+        //Keep reference the all the loaded enemies in the scene
+        loadedEnemies.Add(enemy);
     }
 }

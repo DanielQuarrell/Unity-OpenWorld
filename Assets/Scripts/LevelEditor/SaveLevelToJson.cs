@@ -9,10 +9,13 @@ using UnityEditor;
 
 public class SaveLevelToJson: MonoBehaviour
 {
+    [SerializeField] GameObject enemiesHolder;
     [SerializeField] GameObject world;
     [SerializeField] List<WorldChunk> chunks;
+    [SerializeField] List<EnemyController> enemies;
 
     WorldData worldData;
+    WorldEnemyData worldEnemyData;
 
     public void SortObjectsIntoWorld()
     {
@@ -20,7 +23,7 @@ public class SaveLevelToJson: MonoBehaviour
         {
             if (child.GetComponent<WorldChunk>())
             {
-                if(!ChunkExists(child.GetComponent<WorldChunk>()))
+                if (!ChunkExists(child.GetComponent<WorldChunk>()))
                 {
                     chunks.Add(child.GetComponent<WorldChunk>());
                 }
@@ -30,6 +33,19 @@ public class SaveLevelToJson: MonoBehaviour
                 CheckObjectInChunks(child);
             }
         }
+
+        foreach (Transform child in enemiesHolder.transform)
+        {
+            if (child.GetComponent<EnemyController>())
+            {
+                if (!EnemyExists(child.GetComponent<EnemyController>()))
+                {
+                    enemies.Add(child.GetComponent<EnemyController>());
+                }
+            }
+        }
+
+        AssignEnemiesToChunk();
     }
 
     bool ChunkExists(WorldChunk newChunk)
@@ -37,6 +53,19 @@ public class SaveLevelToJson: MonoBehaviour
         foreach (WorldChunk chunk in chunks)
         {
             if (newChunk == chunk)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool EnemyExists(EnemyController newEnemy)
+    {
+        foreach (EnemyController enemy in enemies)
+        {
+            if (newEnemy == enemy)
             {
                 return true;
             }
@@ -58,10 +87,29 @@ public class SaveLevelToJson: MonoBehaviour
         }
     }
 
+    void AssignEnemiesToChunk()
+    {
+        foreach (EnemyController enemy in enemies)
+        {
+            foreach (WorldChunk chunk in chunks)
+            {
+                if (chunk.ObjectInChunk(enemy.transform))
+                {
+                    enemy.coordinate = chunk.GetCoordinate();
+                    break;
+                }
+            }
+        }
+    }
+
     public void Save()
     {
         worldData = new WorldData();
         worldData.chunks = new List<ChunkData>();
+        worldEnemyData = new WorldEnemyData();
+        worldEnemyData.enemies = new List<EnemyData>();
+
+        int enemyId = 0;
 
         foreach (WorldChunk chunk in chunks)
         {
@@ -82,6 +130,12 @@ public class SaveLevelToJson: MonoBehaviour
             }
 
             worldData.chunks.Add(chunkData);
+        }
+
+        foreach (EnemyController enemy in enemies)
+        {
+            worldEnemyData.enemies.Add(ProcessEnemy(enemy, enemyId));
+            enemyId++;
         }
 
         SaveToJson();
@@ -148,7 +202,7 @@ public class SaveLevelToJson: MonoBehaviour
 
             Mesh mesh = chunkObject.GetComponent<MeshFilter>().sharedMesh;
 
-            if(AssetDatabase.IsSubAsset(mesh.GetInstanceID()) && chunkObject.transform.parent.name != "Chunk")
+            if (AssetDatabase.IsSubAsset(mesh.GetInstanceID()) && chunkObject.transform.parent.name != "Chunk")
             {
                 string modelString = chunkObject.transform.parent.name;
                 worldObject.model = modelString.Replace(" Instance", "");
@@ -174,14 +228,14 @@ public class SaveLevelToJson: MonoBehaviour
             worldObject.hasModel = false;
         }
 
-        if (chunkObject.GetComponent<NavMeshModifierVolume>())
+        if (chunkObject.GetComponent<NavMeshObstacle>())
         {
             worldObject.isNavMeshObstacle = true;
 
-            NavMeshModifierVolume navMeshModifierVolume = chunkObject.GetComponent<NavMeshModifierVolume>();
+            NavMeshObstacle navMeshObstacle = chunkObject.GetComponent<NavMeshObstacle>();
 
-            worldObject.size = new SerializableVector3(navMeshModifierVolume.size);
-            worldObject.center = new SerializableVector3(navMeshModifierVolume.center);
+            worldObject.size = new SerializableVector3(navMeshObstacle.size);
+            worldObject.center = new SerializableVector3(navMeshObstacle.center);
         }
         else
         {
@@ -197,11 +251,47 @@ public class SaveLevelToJson: MonoBehaviour
         return worldObject;
     }
 
+    EnemyData ProcessEnemy(EnemyController enemyInChunk, int id)
+    {
+        EnemyData enemy = new EnemyData();
+
+        enemy.id = id;
+        enemy.coordinate = new SerializableVector2(enemyInChunk.coordinate);
+
+        enemy.prefabName = enemyInChunk.gameObject.name;
+        enemy.position = new SerializableVector3(enemyInChunk.transform.position);
+        enemy.rotation = new SerializableQuaternion(enemyInChunk.transform.rotation);
+        enemy.scale = new SerializableVector3(enemyInChunk.transform.localScale);
+
+        enemy.spawnPosition = new SerializableVector3(enemyInChunk.transform.position);
+        enemy.spawnRotation = new SerializableQuaternion(enemyInChunk.transform.rotation);
+        enemy.spawnScale = new SerializableVector3(enemyInChunk.transform.localScale);
+
+        EnemyController enemyController = enemyInChunk.GetComponent<EnemyController>();
+        NavMeshAgent enemyAgent = enemyInChunk.GetComponent<NavMeshAgent>();
+
+        enemy.dead = false;
+        enemy.maxHealth = enemyController.GetHealth();
+        enemy.health = enemyController.GetHealth();
+
+        enemy.speed = enemyAgent.speed;
+        enemy.attackingRange = enemyController.attackingRange;
+        enemy.exploringRange = enemyController.exploringRange;
+        enemy.idleTime = enemyController.idleTime;
+
+        return enemy;
+    }
+
     void SaveToJson()
     {
-        string data = string.Empty;
-        data = JsonUtility.ToJson(worldData, true);
-        File.WriteAllText(Application.persistentDataPath + "/worldJSON.json", data);
+        string worldDataString = string.Empty;
+        worldDataString = JsonUtility.ToJson(worldData, true);
+        File.WriteAllText(Application.persistentDataPath + "/worldJSON.json", worldDataString);
         Debug.Log("Saved world to: " + Application.persistentDataPath + "/worldJSON.json");
+
+        string enemyDataString = string.Empty;
+        enemyDataString = JsonUtility.ToJson(worldEnemyData, true);
+        File.WriteAllText(Application.persistentDataPath + "/enemiesJSON.json", enemyDataString);
+        Debug.Log("Saved world to: " + Application.persistentDataPath + "/enemiesJSON.json");
     }
 }

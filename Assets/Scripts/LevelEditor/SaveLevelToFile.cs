@@ -9,10 +9,13 @@ using UnityEditor;
 
 public class SaveLevelToFile: MonoBehaviour
 {
+    [SerializeField] GameObject enemiesHolder;
     [SerializeField] GameObject world;
     [SerializeField] List<WorldChunk> chunks;
+    [SerializeField] List<EnemyController> enemies;
 
     WorldData worldData;
+    WorldEnemyData worldEnemyData;
 
     public void SortObjectsIntoWorld()
     {
@@ -30,6 +33,19 @@ public class SaveLevelToFile: MonoBehaviour
                 CheckObjectInChunks(child);
             }
         }
+
+        foreach (Transform child in enemiesHolder.transform)
+        {
+            if (child.GetComponent<EnemyController>())
+            {
+                if(!EnemyExists(child.GetComponent<EnemyController>()))
+                {
+                    enemies.Add(child.GetComponent<EnemyController>());
+                }
+            }
+        }
+
+        AssignEnemiesToChunk();
     }
 
     bool ChunkExists(WorldChunk newChunk)
@@ -37,6 +53,19 @@ public class SaveLevelToFile: MonoBehaviour
         foreach (WorldChunk chunk in chunks)
         {
             if (newChunk == chunk)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool EnemyExists(EnemyController newEnemy)
+    {
+        foreach (EnemyController enemy in enemies)
+        {
+            if (newEnemy == enemy)
             {
                 return true;
             }
@@ -58,10 +87,29 @@ public class SaveLevelToFile: MonoBehaviour
         }
     }
 
+    void AssignEnemiesToChunk()
+    {
+        foreach (EnemyController enemy in enemies)
+        {
+            foreach (WorldChunk chunk in chunks)
+            {
+                if (chunk.ObjectInChunk(enemy.transform))
+                {
+                    enemy.coordinate = chunk.GetCoordinate();
+                    break;
+                }
+            }
+        }
+    }
+
     public void Save()
     {
         worldData = new WorldData();
         worldData.chunks = new List<ChunkData>();
+        worldEnemyData = new WorldEnemyData();
+        worldEnemyData.enemies = new List<EnemyData>();
+
+        int enemyId = 0;
 
         foreach (WorldChunk chunk in chunks)
         {
@@ -82,6 +130,12 @@ public class SaveLevelToFile: MonoBehaviour
             }
 
             worldData.chunks.Add(chunkData);
+        }
+
+        foreach (EnemyController enemy in enemies)
+        {
+            worldEnemyData.enemies.Add(ProcessEnemy(enemy, enemyId));
+            enemyId++;
         }
 
         SaveToBinary();
@@ -197,12 +251,48 @@ public class SaveLevelToFile: MonoBehaviour
         return worldObject;
     }
 
+    EnemyData ProcessEnemy(EnemyController enemyInChunk, int id)
+    {
+        EnemyData enemy = new EnemyData();
+
+        enemy.id = id;
+        enemy.coordinate = new SerializableVector2(enemyInChunk.coordinate);
+
+        enemy.prefabName = enemyInChunk.gameObject.name;
+        enemy.position = new SerializableVector3(enemyInChunk.transform.position);
+        enemy.rotation = new SerializableQuaternion(enemyInChunk.transform.rotation);
+        enemy.scale = new SerializableVector3(enemyInChunk.transform.localScale);
+
+        enemy.spawnPosition = new SerializableVector3(enemyInChunk.transform.position);
+        enemy.spawnRotation = new SerializableQuaternion(enemyInChunk.transform.rotation);
+        enemy.spawnScale = new SerializableVector3(enemyInChunk.transform.localScale);
+
+        EnemyController enemyController = enemyInChunk.GetComponent<EnemyController>();
+        NavMeshAgent enemyAgent = enemyInChunk.GetComponent<NavMeshAgent>();
+
+        enemy.dead = false;
+        enemy.maxHealth = enemyController.GetHealth();
+        enemy.health = enemyController.GetHealth();
+
+        enemy.speed = enemyAgent.speed;
+        enemy.attackingRange = enemyController.attackingRange;
+        enemy.exploringRange = enemyController.exploringRange;
+        enemy.idleTime = enemyController.idleTime;
+
+        return enemy;
+    }
+
     void SaveToBinary()
     {
         BinaryFormatter bf = new BinaryFormatter();
-        FileStream file = File.Create(Application.persistentDataPath + "/worldData.dat");
-        bf.Serialize(file, worldData);
-        file.Close();
+        FileStream worldFile = File.Create(Application.persistentDataPath + "/worldData.dat");
+        bf.Serialize(worldFile, worldData);
+        worldFile.Close();
         Debug.Log("Saved world to: " + Application.persistentDataPath + "/worldData.dat");
+
+        FileStream enemiesFile = File.Create(Application.persistentDataPath + "/enemiesData.dat");
+        bf.Serialize(enemiesFile, worldEnemyData);
+        enemiesFile.Close();
+        Debug.Log("Saved enemies to: " + Application.persistentDataPath + "/enemiesData.dat");
     }
 }

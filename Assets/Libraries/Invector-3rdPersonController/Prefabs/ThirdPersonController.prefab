@@ -1357,12 +1357,12 @@ MonoBehaviour:
     rotateWithCamera: 1
     walkSpeed: 4
     runningSpeed: 8
-    sprintSpeed: 16
+    sprintSpeed: 12
   jumpWithRigidbodyForce: 0
   jumpAndRotate: 1
   jumpTimer: 0.3
   jumpHeight: 8
-  airSpeed: 7
+  airSpeed: 12
   airSmooth: 6
   extraGravity: -10
   limitFallVelocity: -15

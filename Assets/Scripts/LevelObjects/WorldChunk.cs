@@ -73,6 +73,11 @@ public class WorldChunk : MonoBehaviour
             FindObjectsInChunk();
         }
 
+        if(objectsInChunk == null)
+        {
+            return new List<GameObject>();
+        }
+
         return objectsInChunk;
     }
 
@@ -85,11 +90,14 @@ public class WorldChunk : MonoBehaviour
 
     public bool ObjectInChunk(Transform worldObject)
     {
-        foreach (GameObject chunkObject in objectsInChunk)
+        if(objectsInChunk != null)
         {
-            if(worldObject.gameObject == chunkObject)
+            foreach (GameObject chunkObject in objectsInChunk)
             {
-                return false;
+                if (worldObject.gameObject == chunkObject)
+                {
+                    return false;
+                }
             }
         }
 
