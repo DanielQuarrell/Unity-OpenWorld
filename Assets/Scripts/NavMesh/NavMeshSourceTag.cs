@@ -6,21 +6,21 @@ using System.Collections.Generic;
 public class NavMeshSourceTag : MonoBehaviour
 {
     // Global containers for all active mesh/terrain tags
-    public static List<MeshFilter> m_Meshes = new List<MeshFilter>();
-    public static List<Terrain> m_Terrains = new List<Terrain>();
+    public static List<MeshFilter> meshes = new List<MeshFilter>();
+    public static List<Terrain> terrains = new List<Terrain>();
 
     void OnEnable()
     {
         MeshFilter mesh = GetComponent<MeshFilter>();
         if (mesh != null)
         {
-            m_Meshes.Add(mesh);
+            meshes.Add(mesh);
         }
 
         Terrain terrain = GetComponent<Terrain>();
         if (terrain != null)
         {
-            m_Terrains.Add(terrain);
+            terrains.Add(terrain);
         }
     }
 
@@ -29,13 +29,13 @@ public class NavMeshSourceTag : MonoBehaviour
         MeshFilter mesh = GetComponent<MeshFilter>();
         if (mesh != null)
         {
-            m_Meshes.Remove(mesh);
+            meshes.Remove(mesh);
         }
 
         Terrain terrain = GetComponent<Terrain>();
         if (terrain != null)
         {
-            m_Terrains.Remove(terrain);
+            terrains.Remove(terrain);
         }
     }
 
@@ -44,9 +44,9 @@ public class NavMeshSourceTag : MonoBehaviour
     {
         sources.Clear();
 
-        for (int i = 0; i < m_Meshes.Count; ++i)
+        for (int i = 0; i < meshes.Count; ++i)
         {
-            MeshFilter mesh = m_Meshes[i];
+            MeshFilter mesh = meshes[i];
             if (mesh == null) continue;
 
             var m = mesh.sharedMesh;
@@ -60,15 +60,16 @@ public class NavMeshSourceTag : MonoBehaviour
             sources.Add(source);
         }
 
-        for (int i = 0; i < m_Terrains.Count; ++i)
+        for (int i = 0; i < terrains.Count; ++i)
         {
-            Terrain terrain = m_Terrains[i];
+            Terrain terrain = terrains[i];
             if (terrain == null) continue;
 
             NavMeshBuildSource source = new NavMeshBuildSource();
             source.shape = NavMeshBuildSourceShape.Terrain;
             source.sourceObject = terrain.terrainData;
-            // Terrain system only supports translation - so we pass translation only to back-end
+
+            // Terrain system only supports translation
             source.transform = Matrix4x4.TRS(terrain.transform.position, Quaternion.identity, Vector3.one);
             source.area = 0;
             sources.Add(source);

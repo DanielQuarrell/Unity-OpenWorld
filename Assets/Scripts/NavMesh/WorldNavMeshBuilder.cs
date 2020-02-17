@@ -8,18 +8,17 @@ using NavMeshBuilder = UnityEngine.AI.NavMeshBuilder;
 [DefaultExecutionOrder(-102)]
 public class WorldNavMeshBuilder : MonoBehaviour
 {
-    NavMeshData m_NavMesh;
-    AsyncOperation m_Operation;
-    NavMeshDataInstance m_Instance;
-    List<NavMeshBuildSource> m_Sources = new List<NavMeshBuildSource>();
+    NavMeshData navMesh;
+    AsyncOperation asyncOperation;
+    NavMeshDataInstance instance;
+    List<NavMeshBuildSource> sources = new List<NavMeshBuildSource>();
 
     IEnumerator Start()
     {
         while (true)
         {
             UpdateNavMesh(true);
-            //yield return new WaitWhile(() => m_Operation.isDone == false);
-            yield return m_Operation;
+            yield return asyncOperation;
             yield return new WaitForSeconds(1);
         }
     }
@@ -27,8 +26,8 @@ public class WorldNavMeshBuilder : MonoBehaviour
     void OnEnable()
     {
         // Construct and add navmesh
-        m_NavMesh = new NavMeshData();
-        m_Instance = NavMesh.AddNavMeshData(m_NavMesh);
+        navMesh = new NavMeshData();
+        instance = NavMesh.AddNavMeshData(navMesh);
 
         UpdateNavMesh(false);
     }
@@ -36,22 +35,32 @@ public class WorldNavMeshBuilder : MonoBehaviour
     void OnDisable()
     {
         // Unload navmesh and clear handle
-        m_Instance.Remove();
+        instance.Remove();
     }
 
     void UpdateNavMesh(bool asyncUpdate = false)
     {
-        NavMeshSourceTag.Collect(ref m_Sources);
+        if(asyncOperation != null)
+        {
+            if(!asyncOperation.isDone)
+            {
+                NavMeshBuilder.Cancel(navMesh);
+            }
+        }
+
+        NavMeshSourceTag.Collect(ref sources);
+
+        List<NavMeshBuildSource> navMeshSources = sources;
         NavMeshBuildSettings defaultBuildSettings = NavMesh.GetSettingsByID(0);
         Bounds bounds = WorldChunk.GetWorldBounds();
 
         if (asyncUpdate)
         {
-            m_Operation = NavMeshBuilder.UpdateNavMeshDataAsync(m_NavMesh, defaultBuildSettings, m_Sources, bounds);
+            asyncOperation = NavMeshBuilder.UpdateNavMeshDataAsync(navMesh, defaultBuildSettings, navMeshSources, bounds);
         }
         else
         {
-            NavMeshBuilder.UpdateNavMeshData(m_NavMesh, defaultBuildSettings, m_Sources, bounds);
+            NavMeshBuilder.UpdateNavMeshData(navMesh, defaultBuildSettings, sources, bounds);
         }
     }
 

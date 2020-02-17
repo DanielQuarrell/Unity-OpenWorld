@@ -290,6 +290,7 @@ public class WorldChunkLoader : MonoBehaviour
             worldObject.AddComponent<NavMeshSourceTag>();
         }
 
+        //Add nav mesh obstacles for lakes
         if(worldObjectData.isNavMeshObstacle)
         {
             worldObject.AddComponent<NavMeshObstacle>();

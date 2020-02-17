@@ -2455,7 +2455,7 @@ MonoBehaviour:
   - {fileID: 16756311}
   - {fileID: 228716373}
   enemiesHolder: {fileID: 2026697617}
-  distanceToLoadChunk: 75
+  distanceToLoadChunk: 50
 --- !u!114 &1362344877
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2534,7 +2534,7 @@ MonoBehaviour:
   - {fileID: 873019436}
   - {fileID: 16756311}
   - {fileID: 228716373}
-  distanceToLoadChunk: 100
+  distanceToLoadChunk: 50
 --- !u!1 &1452713396
 GameObject:
   m_ObjectHideFlags: 0

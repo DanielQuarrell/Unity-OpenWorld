@@ -143,6 +143,7 @@ public class WorldChunk : MonoBehaviour
             maxZ = Mathf.Max(maxZ, activeChunkBounds[i].center.z);
         }
 
+        //Vector3 size = new Vector3(128, 100, 96);
         Vector3 size = new Vector3(maxX - minX + 32, 100, maxZ - minZ + 32);
         Vector3 center = new Vector3((minX + maxX) * 0.5f, (minY + maxY) * 0.5f, (minZ + maxZ) * 0.5f);
 
@@ -155,6 +156,8 @@ public class WorldChunk : MonoBehaviour
         {
             return new Bounds(Vector3.zero, Vector3.zero);
         }
+
+        Debug.Log(size);
 
         return new Bounds(center, size);
     }
