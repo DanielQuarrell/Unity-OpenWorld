@@ -8,8 +8,16 @@ public class WorldChunkLoaderJSON : MonoBehaviour
 {
     [SerializeField] GameObject player;
     [SerializeField] WorldChunk[] chunks;
+    [SerializeField] GameObject enemiesHolder;
 
     [SerializeField] float distanceToLoadChunk = 100;
+
+    private List<EnemyController> loadedEnemies;
+
+    private void Awake()
+    {
+        loadedEnemies = new List<EnemyController>();
+    }
 
     void Update()
     {
@@ -32,7 +40,7 @@ public class WorldChunkLoaderJSON : MonoBehaviour
                 if (chunk.IsChunkActive())
                 {
                     chunk.SetChunkActive(false);
-                    chunk.Unload();
+                    UnloadChunk(chunk);
                 }
             }
         }
@@ -40,19 +48,93 @@ public class WorldChunkLoaderJSON : MonoBehaviour
 
     void LoadChunk(WorldChunk chunk)
     {
-        if (File.Exists(Application.persistentDataPath + "/worldData.dat"))
+        if (File.Exists(Application.persistentDataPath + "/worldJSON.json") && File.Exists(Application.persistentDataPath + "/enemiesJSON.json"))
         {
-            //Load from JSON
-            string data = File.ReadAllText(Application.persistentDataPath + "/worldData.dat");
-            WorldData worldData = JsonUtility.FromJson<WorldData>(data);
+            //Load files from JSON
+            string worldFile = File.ReadAllText(Application.persistentDataPath + "/worldJSON.json");
+            WorldData worldData = JsonUtility.FromJson<WorldData>(worldFile);
+
+            string enemiesFile = File.ReadAllText(Application.persistentDataPath + "/enemiesJSON.json");
+            WorldEnemyData worldEnemyData = JsonUtility.FromJson<WorldEnemyData>(enemiesFile);
 
             foreach (ChunkData chunkData in worldData.chunks)
             {
                 if (chunkData.coordinate.vector2 == chunk.GetCoordinate())
                 {
-                    IEnumerator loadChunkAsync = LoadChunkAsync(chunk, chunkData);
-                    StartCoroutine(loadChunkAsync);
+                    StartCoroutine(LoadChunkAsync(chunk, chunkData));
+                    StartCoroutine(LoadEnemies(chunk, worldEnemyData));
                 }
+            }
+        }
+    }
+
+    void UnloadChunk(WorldChunk chunk)
+    {
+        if (File.Exists(Application.persistentDataPath + "/enemiesJSON.json"))
+        {
+            //Load enemy file
+            string enemiesFile = File.ReadAllText(Application.persistentDataPath + "/enemiesJSON.json");
+            WorldEnemyData worldEnemyData = JsonUtility.FromJson<WorldEnemyData>(enemiesFile);
+
+            if (loadedEnemies != null)
+            {
+                List<EnemyController> enemiesToRemove = new List<EnemyController>();
+
+                foreach (EnemyController enemy in loadedEnemies)
+                {
+                    if (chunk.ObjectInChunk(enemy.transform))
+                    {
+                        //Rewrite the enemy data with the loaded enemy
+                        OverideEnemy(ref worldEnemyData, enemy, chunk.GetCoordinate());
+
+                        enemiesToRemove.Add(enemy);
+                    }
+                }
+
+                foreach (EnemyController enemy in enemiesToRemove)
+                {
+                    loadedEnemies.Remove(enemy);
+                    Destroy(enemy.gameObject);
+                }
+            }
+
+            //Overwrite enemy file
+            enemiesFile = JsonUtility.ToJson(worldEnemyData, true);
+            File.WriteAllText(Application.persistentDataPath + "/enemiesJSON.json", enemiesFile);
+        }
+
+        //Remove loaded objects
+        chunk.Unload();
+    }
+
+    bool IsEnemyLoaded(int id)
+    {
+        foreach (EnemyController loadedEnemy in loadedEnemies)
+        {
+            if (loadedEnemy.id == id)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    void OverideEnemy(ref WorldEnemyData worldEnemyData, EnemyController enemyInChunk, Vector2 coordinate)
+    {
+        //Ensure it rewrites the same enemy
+        for (int i = 0; i < worldEnemyData.enemies.Count; i++)
+        {
+            if (worldEnemyData.enemies[i].id == enemyInChunk.id)
+            {
+                worldEnemyData.enemies[i].coordinate = new SerializableVector2(coordinate);
+
+                worldEnemyData.enemies[i].position = new SerializableVector3(enemyInChunk.transform.position);
+                worldEnemyData.enemies[i].rotation = new SerializableQuaternion(enemyInChunk.transform.rotation);
+                worldEnemyData.enemies[i].scale = new SerializableVector3(enemyInChunk.transform.localScale);
+
+                worldEnemyData.enemies[i].dead = enemyInChunk.IsDead();
+                worldEnemyData.enemies[i].health = enemyInChunk.GetHealth();
             }
         }
     }
@@ -146,6 +228,9 @@ public class WorldChunkLoaderJSON : MonoBehaviour
         terrainObject.GetComponent<Terrain>().terrainData = terrainData;
         terrainObject.GetComponent<TerrainCollider>().terrainData = terrainData;
 
+        //Add it as a source tag for the navMesh
+        terrainObject.AddComponent<NavMeshSourceTag>();
+
         //Add terrain to chunk
         chunk.SetTerrain(terrainObject);
 
@@ -190,6 +275,18 @@ public class WorldChunkLoaderJSON : MonoBehaviour
             worldObject.GetComponent<MeshFilter>().sharedMesh = mesh;
             worldObject.GetComponent<MeshCollider>().sharedMesh = mesh;
             worldObject.GetComponent<MeshRenderer>().sharedMaterials = objectMaterials.ToArray();
+
+            //Add it as a source tag for the navMesh
+            worldObject.AddComponent<NavMeshSourceTag>();
+        }
+
+        //Add nav mesh obstacles for lakes
+        if (worldObjectData.isNavMeshObstacle)
+        {
+            worldObject.AddComponent<UnityEngine.AI.NavMeshObstacle>();
+            worldObject.GetComponent<UnityEngine.AI.NavMeshObstacle>().size = worldObjectData.size.vector3;
+            worldObject.GetComponent<UnityEngine.AI.NavMeshObstacle>().center = worldObjectData.center.vector3;
+            worldObject.GetComponent<UnityEngine.AI.NavMeshObstacle>().carving = true;
         }
 
         //Loop through and create child objects first
@@ -214,4 +311,49 @@ public class WorldChunkLoaderJSON : MonoBehaviour
             chunk.AddObject(worldObject);
         }
     }
+
+    IEnumerator LoadEnemies(WorldChunk chunk, WorldEnemyData worldEnemyData)
+    {
+        //Find enemies in chunk
+        foreach (EnemyData enemyData in worldEnemyData.enemies)
+        {
+            if (enemyData.coordinate.vector2 == chunk.GetCoordinate())
+            {
+                //If the enemy is not loaded, then spawn the enemy
+                if (!IsEnemyLoaded(enemyData.id) && !enemyData.dead)
+                {
+                    yield return StartCoroutine(LoadEnemy(enemyData));
+                }
+            }
+        }
+    }
+
+    IEnumerator LoadEnemy(EnemyData enemyData)
+    {
+        //Load enemy prefab
+        ResourceRequest request = Resources.LoadAsync<GameObject>("Enemies/" + enemyData.prefabName);
+        yield return new WaitWhile(() => request.isDone == false);
+        GameObject enemyObject = Instantiate(request.asset as GameObject, enemiesHolder.transform);
+        EnemyController enemy = enemyObject.GetComponent<EnemyController>();
+
+        enemy.id = enemyData.id;
+        enemy.coordinate = enemyData.coordinate.vector2;
+
+        enemy.transform.position = enemyData.position.vector3;
+        enemy.transform.rotation = enemyData.rotation.quaternion;
+        enemy.transform.localScale = enemyData.spawnScale.vector3;
+
+        UnityEngine.AI.NavMeshAgent enemyAgent = enemy.GetComponent<UnityEngine.AI.NavMeshAgent>();
+
+        enemy.SetHealth(enemyData.health);
+
+        enemyAgent.speed = enemyData.speed;
+        enemy.attackingRange = enemyData.attackingRange;
+        enemy.exploringRange = enemyData.exploringRange;
+        enemy.idleTime = enemyData.idleTime;
+
+        //Keep reference the all the loaded enemies in the scene
+        loadedEnemies.Add(enemy);
+    }
 }
+

@@ -41,7 +41,7 @@ public class EnemyController : MonoBehaviour
 
     private void Update()
     {
-        if(!dead)
+        if(!dead && agent.isOnNavMesh)
         {
             if (PlayerInRange())
             {
@@ -88,11 +88,8 @@ public class EnemyController : MonoBehaviour
 
     private void FindNewLocation()
     {
-        if(agent.isOnNavMesh)
-        {
-            agent.SetDestination(GetRandomPoint(this.transform.position, exploringRange));
-            currentState = EnemyState.ROAMING;
-        }
+        agent.SetDestination(GetRandomPoint(this.transform.position, exploringRange));
+        currentState = EnemyState.ROAMING;
     }
 
     private Vector3 GetRandomPoint(Vector3 center, float maxDistance)

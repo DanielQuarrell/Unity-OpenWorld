@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using UnityEngine.AI;
 using System.Runtime.Serialization.Formatters.Binary;
 
 public class WorldChunkLoader : MonoBehaviour
 {
     [SerializeField] GameObject player;
-    [SerializeField] NavMeshSurface navMeshSurface;
     [SerializeField] WorldChunk[] chunks;
     [SerializeField] GameObject enemiesHolder;
 
@@ -293,10 +291,10 @@ public class WorldChunkLoader : MonoBehaviour
         //Add nav mesh obstacles for lakes
         if(worldObjectData.isNavMeshObstacle)
         {
-            worldObject.AddComponent<NavMeshObstacle>();
-            worldObject.GetComponent<NavMeshObstacle>().size = worldObjectData.size.vector3;
-            worldObject.GetComponent<NavMeshObstacle>().center = worldObjectData.center.vector3;
-            worldObject.GetComponent<NavMeshObstacle>().carving = true;
+            worldObject.AddComponent<UnityEngine.AI.NavMeshObstacle>();
+            worldObject.GetComponent<UnityEngine.AI.NavMeshObstacle>().size = worldObjectData.size.vector3;
+            worldObject.GetComponent<UnityEngine.AI.NavMeshObstacle>().center = worldObjectData.center.vector3;
+            worldObject.GetComponent<UnityEngine.AI.NavMeshObstacle>().carving = true;
         }
 
         //Loop through and create child objects first
@@ -353,7 +351,7 @@ public class WorldChunkLoader : MonoBehaviour
         enemy.transform.rotation = enemyData.rotation.quaternion;
         enemy.transform.localScale = enemyData.spawnScale.vector3;
 
-        NavMeshAgent enemyAgent = enemy.GetComponent<NavMeshAgent>();
+        UnityEngine.AI.NavMeshAgent enemyAgent = enemy.GetComponent<UnityEngine.AI.NavMeshAgent>();
 
         enemy.SetHealth(enemyData.health);
 

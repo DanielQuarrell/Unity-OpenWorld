@@ -129,6 +129,10 @@ public class WorldChunk : MonoBehaviour
         float maxY = Mathf.NegativeInfinity;
         float maxZ = Mathf.NegativeInfinity;
 
+        float boundHeight = 100;
+        float xChunkOffset = 32;
+        float zChunkOffset = 32;
+
         //Loop through the 8 vertices describing the bounding box
         for (int i = 0; i < activeChunkBounds.Count; i++)
         {
@@ -141,10 +145,14 @@ public class WorldChunk : MonoBehaviour
             maxX = Mathf.Max(maxX, activeChunkBounds[i].center.x);
             maxY = Mathf.Max(maxY, activeChunkBounds[i].center.y);
             maxZ = Mathf.Max(maxZ, activeChunkBounds[i].center.z);
+
+            xChunkOffset = activeChunkBounds[0].size.x;
+            zChunkOffset = activeChunkBounds[0].size.z;
         }
 
         //Vector3 size = new Vector3(128, 100, 96);
-        Vector3 size = new Vector3(maxX - minX + 32, 100, maxZ - minZ + 32);
+
+        Vector3 size = new Vector3(maxX - minX + xChunkOffset, boundHeight, maxZ - minZ + zChunkOffset);
         Vector3 center = new Vector3((minX + maxX) * 0.5f, (minY + maxY) * 0.5f, (minZ + maxZ) * 0.5f);
 
         if(minX == Mathf.Infinity ||
