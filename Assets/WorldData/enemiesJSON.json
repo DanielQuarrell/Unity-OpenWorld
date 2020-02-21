@@ -1,0 +1,333 @@
+{
+    "enemies": [
+        {
+            "coordinate": {
+                "x": 2.0,
+                "y": 3.0
+            },
+            "prefabName": "Enemy_AI",
+            "id": 0,
+            "spawnPosition": {
+                "x": 71.69999694824219,
+                "y": 19.52400016784668,
+                "z": 108.10600280761719
+            },
+            "spawnRotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+            },
+            "spawnScale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "position": {
+                "x": 71.69999694824219,
+                "y": 19.52400016784668,
+                "z": 108.10600280761719
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "dead": false,
+            "maxHealth": 3,
+            "health": 3,
+            "speed": 4.0,
+            "attackingRange": 20.0,
+            "exploringRange": 20.0,
+            "idleTime": 4.0
+        },
+        {
+            "coordinate": {
+                "x": 1.0,
+                "y": 0.0
+            },
+            "prefabName": "Enemy_AI",
+            "id": 1,
+            "spawnPosition": {
+                "x": 36.099998474121097,
+                "y": 14.170000076293946,
+                "z": 17.200000762939454
+            },
+            "spawnRotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+            },
+            "spawnScale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "position": {
+                "x": 36.099998474121097,
+                "y": 14.170000076293946,
+                "z": 17.200000762939454
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "dead": false,
+            "maxHealth": 3,
+            "health": 3,
+            "speed": 4.0,
+            "attackingRange": 20.0,
+            "exploringRange": 20.0,
+            "idleTime": 4.0
+        },
+        {
+            "coordinate": {
+                "x": 0.0,
+                "y": 1.0
+            },
+            "prefabName": "Enemy_AI",
+            "id": 2,
+            "spawnPosition": {
+                "x": 23.700000762939454,
+                "y": 15.449999809265137,
+                "z": 37.70000076293945
+            },
+            "spawnRotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+            },
+            "spawnScale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "position": {
+                "x": 23.700000762939454,
+                "y": 15.449999809265137,
+                "z": 37.70000076293945
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "dead": false,
+            "maxHealth": 3,
+            "health": 3,
+            "speed": 4.0,
+            "attackingRange": 20.0,
+            "exploringRange": 20.0,
+            "idleTime": 4.0
+        },
+        {
+            "coordinate": {
+                "x": 5.0,
+                "y": 3.0
+            },
+            "prefabName": "Enemy_AI",
+            "id": 3,
+            "spawnPosition": {
+                "x": 187.0,
+                "y": 13.5,
+                "z": 115.30000305175781
+            },
+            "spawnRotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+            },
+            "spawnScale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "position": {
+                "x": 187.0,
+                "y": 13.5,
+                "z": 115.30000305175781
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "dead": false,
+            "maxHealth": 3,
+            "health": 3,
+            "speed": 4.0,
+            "attackingRange": 20.0,
+            "exploringRange": 20.0,
+            "idleTime": 4.0
+        },
+        {
+            "coordinate": {
+                "x": 6.0,
+                "y": 6.0
+            },
+            "prefabName": "Enemy_AI",
+            "id": 4,
+            "spawnPosition": {
+                "x": 213.36000061035157,
+                "y": 14.329999923706055,
+                "z": 208.41000366210938
+            },
+            "spawnRotation": {
+                "x": 0.0,
+                "y": -0.9218235015869141,
+                "z": 0.0,
+                "w": 0.38760995864868166
+            },
+            "spawnScale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "position": {
+                "x": 213.36000061035157,
+                "y": 14.329999923706055,
+                "z": 208.41000366210938
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": -0.9218235015869141,
+                "z": 0.0,
+                "w": 0.38760995864868166
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "dead": false,
+            "maxHealth": 3,
+            "health": 3,
+            "speed": 4.0,
+            "attackingRange": 20.0,
+            "exploringRange": 20.0,
+            "idleTime": 4.0
+        },
+        {
+            "coordinate": {
+                "x": 6.0,
+                "y": 6.0
+            },
+            "prefabName": "Enemy_AI",
+            "id": 5,
+            "spawnPosition": {
+                "x": 223.1999969482422,
+                "y": 15.119999885559082,
+                "z": 220.89999389648438
+            },
+            "spawnRotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+            },
+            "spawnScale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "position": {
+                "x": 223.1999969482422,
+                "y": 15.119999885559082,
+                "z": 220.89999389648438
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "dead": false,
+            "maxHealth": 3,
+            "health": 3,
+            "speed": 4.0,
+            "attackingRange": 20.0,
+            "exploringRange": 20.0,
+            "idleTime": 4.0
+        },
+        {
+            "coordinate": {
+                "x": 1.0,
+                "y": 6.0
+            },
+            "prefabName": "Enemy_AI",
+            "id": 6,
+            "spawnPosition": {
+                "x": 43.400001525878909,
+                "y": 18.25,
+                "z": 207.5
+            },
+            "spawnRotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+            },
+            "spawnScale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "position": {
+                "x": 43.400001525878909,
+                "y": 18.25,
+                "z": 207.5
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+            },
+            "scale": {
+                "x": 1.0,
+                "y": 1.0,
+                "z": 1.0
+            },
+            "dead": false,
+            "maxHealth": 3,
+            "health": 3,
+            "speed": 4.0,
+            "attackingRange": 20.0,
+            "exploringRange": 20.0,
+            "idleTime": 4.0
+        }
+    ]
+}

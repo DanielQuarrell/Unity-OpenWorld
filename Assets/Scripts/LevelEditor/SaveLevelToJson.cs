@@ -192,6 +192,8 @@ public class SaveLevelToJson: MonoBehaviour
         WorldObjectData worldObject = new WorldObjectData();
 
         worldObject.objectName = chunkObject.name;
+        worldObject.isStatic = chunkObject.isStatic;
+
         worldObject.position = new SerializableVector3(childObject ? chunkObject.transform.localPosition : chunkObject.transform.position);
         worldObject.rotation = new SerializableQuaternion(childObject ? chunkObject.transform.localRotation : chunkObject.transform.rotation);
         worldObject.scale = new SerializableVector3(chunkObject.transform.localScale);
@@ -284,14 +286,16 @@ public class SaveLevelToJson: MonoBehaviour
 
     void SaveToJson()
     {
+        string worldDataPath = "Assets/WorldData/";
+
         string worldDataString = string.Empty;
         worldDataString = JsonUtility.ToJson(worldData, true);
-        File.WriteAllText(Application.persistentDataPath + "/worldJSON.json", worldDataString);
-        Debug.Log("Saved world to: " + Application.persistentDataPath + "/worldJSON.json");
+        File.WriteAllText(worldDataPath + "/worldJSON.json", worldDataString);
+        Debug.Log("Saved world to: " + worldDataPath + "/worldJSON.json");
 
         string enemyDataString = string.Empty;
         enemyDataString = JsonUtility.ToJson(worldEnemyData, true);
-        File.WriteAllText(Application.persistentDataPath + "/enemiesJSON.json", enemyDataString);
-        Debug.Log("Saved world to: " + Application.persistentDataPath + "/enemiesJSON.json");
+        File.WriteAllText(worldDataPath + "/enemiesJSON.json", enemyDataString);
+        Debug.Log("Saved world to: " + worldDataPath + "/enemiesJSON.json");
     }
 }

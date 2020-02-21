@@ -192,6 +192,8 @@ public class SaveLevelToFile: MonoBehaviour
         WorldObjectData worldObject = new WorldObjectData();
 
         worldObject.objectName = chunkObject.name;
+        worldObject.isStatic = chunkObject.isStatic;
+
         worldObject.position = new SerializableVector3(childObject ? chunkObject.transform.localPosition : chunkObject.transform.position);
         worldObject.rotation = new SerializableQuaternion(childObject ? chunkObject.transform.localRotation : chunkObject.transform.rotation);
         worldObject.scale = new SerializableVector3(chunkObject.transform.localScale);
@@ -284,15 +286,17 @@ public class SaveLevelToFile: MonoBehaviour
 
     void SaveToBinary()
     {
+        string worldDataPath = "Assets/WorldData/";
+
         BinaryFormatter bf = new BinaryFormatter();
-        FileStream worldFile = File.Create(Application.persistentDataPath + "/worldData.dat");
+        FileStream worldFile = File.Create(worldDataPath + "worldData.dat");
         bf.Serialize(worldFile, worldData);
         worldFile.Close();
-        Debug.Log("Saved world to: " + Application.persistentDataPath + "/worldData.dat");
+        Debug.Log("Saved world to: " + worldDataPath + "/worldData.dat");
 
-        FileStream enemiesFile = File.Create(Application.persistentDataPath + "/enemiesData.dat");
+        FileStream enemiesFile = File.Create(worldDataPath + "/enemiesData.dat");
         bf.Serialize(enemiesFile, worldEnemyData);
         enemiesFile.Close();
-        Debug.Log("Saved enemies to: " + Application.persistentDataPath + "/enemiesData.dat");
+        Debug.Log("Saved enemies to: " + worldDataPath + "/enemiesData.dat");
     }
 }

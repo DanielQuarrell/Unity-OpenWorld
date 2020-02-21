@@ -42,6 +42,12 @@ public class WorldChunkLoaderJSON : MonoBehaviour
                     chunk.SetChunkActive(false);
                     UnloadChunk(chunk);
                 }
+                else
+                {
+                    //Check if chunk is loading
+                    //Stop the coroutine
+                    //Unload the chunk
+                }
             }
         }
     }
@@ -242,6 +248,7 @@ public class WorldChunkLoaderJSON : MonoBehaviour
         //Create object to place in the world
         GameObject worldObject;
         worldObject = new GameObject(worldObjectData.objectName);
+        worldObject.isStatic = worldObjectData.isStatic;
 
         //Load mesh if it has one
         if (worldObjectData.hasModel)

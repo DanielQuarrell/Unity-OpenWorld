@@ -6,6 +6,8 @@ using UnityEngine;
 public class WorldObjectData
 {
     public string objectName;
+    public bool isStatic;
+
     public SerializableVector3 position;
     public SerializableQuaternion rotation;
     public SerializableVector3 scale;

@@ -8,6 +8,8 @@ public class WorldChunk : MonoBehaviour
     public Vector3 center = new Vector3(0.0f, 0.0f, 0.0f);
     public Vector3 size = new Vector3(32.0f, 100.0f, 32.0f);
 
+    public IEnumerator loadCorourtine;
+
     public static List<Bounds> activeChunkBounds = new List<Bounds>();
 
     Bounds chunkBoundary;
@@ -16,6 +18,7 @@ public class WorldChunk : MonoBehaviour
     GameObject terrainObject;
     
     bool chunkActive = false;
+    bool isLoaded = false;
 
     private void Awake()
     {
@@ -58,6 +61,17 @@ public class WorldChunk : MonoBehaviour
     public bool IsChunkActive()
     {
         return chunkActive;
+    }
+
+    public void SetChunkLoaded(bool loaded)
+    {
+        isLoaded = loaded;
+        this.gameObject.SetActive(loaded);
+    }
+
+    public bool IsChunkLoaded()
+    {
+        return isLoaded;
     }
 
     public void AddObject(GameObject newObject)
@@ -117,6 +131,8 @@ public class WorldChunk : MonoBehaviour
         }
 
         objectsInChunk.Clear();
+
+        SetChunkLoaded(false);
     }
 
     public static Bounds GetWorldBounds()
@@ -164,8 +180,6 @@ public class WorldChunk : MonoBehaviour
         {
             return new Bounds(Vector3.zero, Vector3.zero);
         }
-
-        Debug.Log(size);
 
         return new Bounds(center, size);
     }

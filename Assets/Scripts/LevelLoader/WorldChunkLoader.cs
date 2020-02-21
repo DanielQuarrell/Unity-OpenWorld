@@ -19,6 +19,14 @@ public class WorldChunkLoader : MonoBehaviour
         loadedEnemies = new List<EnemyController>();
     }
 
+    private void Start()
+    {
+        foreach (WorldChunk chunk in chunks)
+        {
+            chunk.SetChunkLoaded(false);
+        }
+    }
+
     void Update()
     {
         foreach (WorldChunk chunk in chunks)
@@ -65,8 +73,8 @@ public class WorldChunkLoader : MonoBehaviour
             {
                 if (chunkData.coordinate.vector2 == chunk.GetCoordinate())
                 {
-                    StartCoroutine(LoadChunkAsync(chunk, chunkData));
-                    StartCoroutine(LoadEnemies(chunk, worldEnemyData));
+                    chunk.loadCorourtine = LoadChunkAsync(chunk, chunkData, worldEnemyData);
+                    StartCoroutine(chunk.loadCorourtine);
                 }
             }
         }
@@ -74,6 +82,13 @@ public class WorldChunkLoader : MonoBehaviour
 
     void UnloadChunk(WorldChunk chunk)
     {
+        //If chunk hasn't finished loaded
+        if(!chunk.IsChunkLoaded())
+        {
+            //Stop chunk loading
+            StopCoroutine(chunk.loadCorourtine);
+        }
+
         if (File.Exists(Application.persistentDataPath + "/enemiesData.dat"))
         {
             //Load enemy file
@@ -83,7 +98,7 @@ public class WorldChunkLoader : MonoBehaviour
             WorldEnemyData worldEnemyData = (WorldEnemyData)bf.Deserialize(readFile);
             readFile.Close();
 
-            if(loadedEnemies != null)
+            if (loadedEnemies != null)
             {
                 List<EnemyController> enemiesToRemove = new List<EnemyController>();
 
@@ -109,6 +124,10 @@ public class WorldChunkLoader : MonoBehaviour
             FileStream overwriteFile = File.Open(Application.persistentDataPath + "/enemiesData.dat", FileMode.Open);
             bf.Serialize(overwriteFile, worldEnemyData);
             overwriteFile.Close();
+        }
+        else
+        {
+            Debug.LogError("Enemies File doesn't exist");
         }
 
         //Remove loaded objects
@@ -147,7 +166,7 @@ public class WorldChunkLoader : MonoBehaviour
         }
     }
 
-    IEnumerator LoadChunkAsync(WorldChunk chunk, ChunkData chunkData)
+    IEnumerator LoadChunkAsync(WorldChunk chunk, ChunkData chunkData, WorldEnemyData worldEnemyData)
     {
         yield return StartCoroutine(LoadTerrain(chunk, chunkData.terrainObject));
 
@@ -155,6 +174,10 @@ public class WorldChunkLoader : MonoBehaviour
         {
             yield return StartCoroutine(LoadWorldObject(chunk, worldObjectData, null));
         }
+
+        yield return StartCoroutine(LoadEnemies(chunk.GetCoordinate(), worldEnemyData));
+
+        chunk.SetChunkLoaded(true);
     }
 
     IEnumerator LoadTerrain(WorldChunk chunk, TerrainObjectData terrainObjectData)
@@ -250,6 +273,7 @@ public class WorldChunkLoader : MonoBehaviour
         //Create object to place in the world
         GameObject worldObject;
         worldObject = new GameObject(worldObjectData.objectName);
+        worldObject.isStatic = worldObjectData.isStatic;
 
         //Load mesh if it has one
         if(worldObjectData.hasModel)
@@ -257,6 +281,12 @@ public class WorldChunkLoader : MonoBehaviour
             worldObject.AddComponent<MeshFilter>();
             worldObject.AddComponent<MeshRenderer>();
             worldObject.AddComponent<MeshCollider>();
+
+            /*
+            ResourceRequest meshRequest = Resources.LoadAsync<Mesh>("3D_Models/" + worldObjectData.model);
+            yield return new WaitWhile(() => meshRequest.isDone == false);
+            Mesh mesh = meshRequest.asset as Mesh;
+            */
 
             //Load main and sub Meshes
             Mesh mesh = new Mesh();
@@ -320,12 +350,12 @@ public class WorldChunkLoader : MonoBehaviour
         }
     }
 
-    IEnumerator LoadEnemies(WorldChunk chunk, WorldEnemyData worldEnemyData)
+    IEnumerator LoadEnemies(Vector2 chunkCoordinate, WorldEnemyData worldEnemyData)
     {
         //Find enemies in chunk
         foreach (EnemyData enemyData in worldEnemyData.enemies)
         {
-            if (enemyData.coordinate.vector2 == chunk.GetCoordinate())
+            if (enemyData.coordinate.vector2 == chunkCoordinate)
             {
                 //If the enemy is not loaded, then spawn the enemy
                 if (!IsEnemyLoaded(enemyData.id) && !enemyData.dead)
