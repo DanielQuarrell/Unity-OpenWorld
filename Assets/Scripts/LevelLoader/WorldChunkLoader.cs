@@ -282,12 +282,6 @@ public class WorldChunkLoader : MonoBehaviour
             worldObject.AddComponent<MeshRenderer>();
             worldObject.AddComponent<MeshCollider>();
 
-            /*
-            ResourceRequest meshRequest = Resources.LoadAsync<Mesh>("3D_Models/" + worldObjectData.model);
-            yield return new WaitWhile(() => meshRequest.isDone == false);
-            Mesh mesh = meshRequest.asset as Mesh;
-            */
-
             //Load main and sub Meshes
             Mesh mesh = new Mesh();
 
@@ -297,6 +291,14 @@ public class WorldChunkLoader : MonoBehaviour
                 {
                     mesh = subMesh;
                 }
+            }
+
+            //If child object not a submesh
+            if(mesh.vertexCount == 0)
+            {
+                ResourceRequest meshRequest = Resources.LoadAsync<Mesh>("3D_Models/" + worldObjectData.mesh);
+                yield return new WaitWhile(() => meshRequest.isDone == false);
+                mesh = meshRequest.asset as Mesh;
             }
 
             //Load and apply materials

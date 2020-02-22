@@ -204,7 +204,7 @@ public class SaveLevelToFile: MonoBehaviour
 
             Mesh mesh = chunkObject.GetComponent<MeshFilter>().sharedMesh;
 
-            if(AssetDatabase.IsSubAsset(mesh.GetInstanceID()) && chunkObject.transform.parent.name != "Chunk")
+            if (AssetDatabase.IsSubAsset(mesh.GetInstanceID()) && chunkObject.transform.parent.name != "Chunk")
             {
                 string modelString = chunkObject.transform.parent.name;
                 worldObject.model = modelString.Replace(" Instance", "");
@@ -292,11 +292,11 @@ public class SaveLevelToFile: MonoBehaviour
         FileStream worldFile = File.Create(worldDataPath + "worldData.dat");
         bf.Serialize(worldFile, worldData);
         worldFile.Close();
-        Debug.Log("Saved world to: " + worldDataPath + "/worldData.dat");
+        Debug.Log("Saved world to: " + worldDataPath + "worldData.dat");
 
-        FileStream enemiesFile = File.Create(worldDataPath + "/enemiesData.dat");
+        FileStream enemiesFile = File.Create(worldDataPath + "enemiesData.dat");
         bf.Serialize(enemiesFile, worldEnemyData);
         enemiesFile.Close();
-        Debug.Log("Saved enemies to: " + worldDataPath + "/enemiesData.dat");
+        Debug.Log("Saved enemies to: " + worldDataPath + "enemiesData.dat");
     }
 }

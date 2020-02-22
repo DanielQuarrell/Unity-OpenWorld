@@ -290,12 +290,12 @@ public class SaveLevelToJson: MonoBehaviour
 
         string worldDataString = string.Empty;
         worldDataString = JsonUtility.ToJson(worldData, true);
-        File.WriteAllText(worldDataPath + "/worldJSON.json", worldDataString);
-        Debug.Log("Saved world to: " + worldDataPath + "/worldJSON.json");
+        File.WriteAllText(worldDataPath + "worldJSON.json", worldDataString);
+        Debug.Log("Saved world to: " + worldDataPath + "worldJSON.json");
 
         string enemyDataString = string.Empty;
         enemyDataString = JsonUtility.ToJson(worldEnemyData, true);
-        File.WriteAllText(worldDataPath + "/enemiesJSON.json", enemyDataString);
-        Debug.Log("Saved world to: " + worldDataPath + "/enemiesJSON.json");
+        File.WriteAllText(worldDataPath + "enemiesJSON.json", enemyDataString);
+        Debug.Log("Saved world to: " + worldDataPath + "enemiesJSON.json");
     }
 }
