@@ -40,11 +40,11 @@
                 "z": 1.0
             },
             "dead": false,
-            "maxHealth": 3,
-            "health": 3,
+            "maxHealth": 2,
+            "health": 2,
             "speed": 4.0,
-            "attackingRange": 20.0,
-            "exploringRange": 20.0,
+            "attackingRange": 10.0,
+            "exploringRange": 30.0,
             "idleTime": 4.0
         },
         {
@@ -87,11 +87,11 @@
                 "z": 1.0
             },
             "dead": false,
-            "maxHealth": 3,
-            "health": 3,
+            "maxHealth": 2,
+            "health": 2,
             "speed": 4.0,
-            "attackingRange": 20.0,
-            "exploringRange": 20.0,
+            "attackingRange": 10.0,
+            "exploringRange": 30.0,
             "idleTime": 4.0
         },
         {
@@ -134,11 +134,11 @@
                 "z": 1.0
             },
             "dead": false,
-            "maxHealth": 3,
-            "health": 3,
+            "maxHealth": 2,
+            "health": 2,
             "speed": 4.0,
-            "attackingRange": 20.0,
-            "exploringRange": 20.0,
+            "attackingRange": 10.0,
+            "exploringRange": 30.0,
             "idleTime": 4.0
         },
         {
@@ -181,11 +181,11 @@
                 "z": 1.0
             },
             "dead": false,
-            "maxHealth": 3,
-            "health": 3,
+            "maxHealth": 2,
+            "health": 2,
             "speed": 4.0,
-            "attackingRange": 20.0,
-            "exploringRange": 20.0,
+            "attackingRange": 10.0,
+            "exploringRange": 30.0,
             "idleTime": 4.0
         },
         {
@@ -228,11 +228,11 @@
                 "z": 1.0
             },
             "dead": false,
-            "maxHealth": 3,
-            "health": 3,
+            "maxHealth": 1,
+            "health": 1,
             "speed": 4.0,
-            "attackingRange": 20.0,
-            "exploringRange": 20.0,
+            "attackingRange": 15.0,
+            "exploringRange": 10.0,
             "idleTime": 4.0
         },
         {
@@ -275,11 +275,11 @@
                 "z": 1.0
             },
             "dead": false,
-            "maxHealth": 3,
-            "health": 3,
+            "maxHealth": 1,
+            "health": 1,
             "speed": 4.0,
-            "attackingRange": 20.0,
-            "exploringRange": 20.0,
+            "attackingRange": 15.0,
+            "exploringRange": 10.0,
             "idleTime": 4.0
         },
         {
@@ -322,11 +322,11 @@
                 "z": 1.0
             },
             "dead": false,
-            "maxHealth": 3,
-            "health": 3,
+            "maxHealth": 1,
+            "health": 1,
             "speed": 4.0,
-            "attackingRange": 20.0,
-            "exploringRange": 20.0,
+            "attackingRange": 15.0,
+            "exploringRange": 10.0,
             "idleTime": 4.0
         },
         {
@@ -369,11 +369,11 @@
                 "z": 1.0
             },
             "dead": false,
-            "maxHealth": 3,
-            "health": 3,
+            "maxHealth": 2,
+            "health": 2,
             "speed": 4.0,
-            "attackingRange": 20.0,
-            "exploringRange": 20.0,
+            "attackingRange": 10.0,
+            "exploringRange": 30.0,
             "idleTime": 4.0
         },
         {
@@ -416,11 +416,11 @@
                 "z": 1.0
             },
             "dead": false,
-            "maxHealth": 3,
-            "health": 3,
+            "maxHealth": 1,
+            "health": 1,
             "speed": 4.0,
-            "attackingRange": 20.0,
-            "exploringRange": 20.0,
+            "attackingRange": 15.0,
+            "exploringRange": 30.0,
             "idleTime": 4.0
         },
         {
@@ -463,11 +463,11 @@
                 "z": 1.0
             },
             "dead": false,
-            "maxHealth": 3,
-            "health": 3,
+            "maxHealth": 1,
+            "health": 1,
             "speed": 4.0,
-            "attackingRange": 20.0,
-            "exploringRange": 20.0,
+            "attackingRange": 15.0,
+            "exploringRange": 30.0,
             "idleTime": 4.0
         },
         {
@@ -604,11 +604,11 @@
                 "z": 1.0
             },
             "dead": false,
-            "maxHealth": 3,
-            "health": 3,
+            "maxHealth": 2,
+            "health": 2,
             "speed": 4.0,
-            "attackingRange": 20.0,
-            "exploringRange": 20.0,
+            "attackingRange": 10.0,
+            "exploringRange": 30.0,
             "idleTime": 4.0
         },
         {
@@ -651,11 +651,11 @@
                 "z": 1.0
             },
             "dead": false,
-            "maxHealth": 3,
-            "health": 3,
+            "maxHealth": 1,
+            "health": 1,
             "speed": 4.0,
-            "attackingRange": 20.0,
-            "exploringRange": 20.0,
+            "attackingRange": 15.0,
+            "exploringRange": 30.0,
             "idleTime": 4.0
         },
         {
@@ -698,11 +698,11 @@
                 "z": 1.0
             },
             "dead": false,
-            "maxHealth": 3,
-            "health": 3,
+            "maxHealth": 1,
+            "health": 1,
             "speed": 4.0,
-            "attackingRange": 20.0,
-            "exploringRange": 20.0,
+            "attackingRange": 15.0,
+            "exploringRange": 30.0,
             "idleTime": 4.0
         },
         {

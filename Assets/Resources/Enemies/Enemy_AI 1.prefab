@@ -3191,9 +3191,10 @@ MonoBehaviour:
   animator: {fileID: 0}
   id: 0
   coordinate: {x: 0, y: 0}
-  attackingRange: 20
-  exploringRange: 20
+  attackingRange: 10
+  exploringRange: 30
   idleTime: 4
+  health: 2
 --- !u!136 &6455985068096834460
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -3218,7 +3219,7 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.5
-  m_Speed: 4
+  m_Speed: 3
   m_Acceleration: 8
   avoidancePriority: 50
   m_AngularSpeed: 120

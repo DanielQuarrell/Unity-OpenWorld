@@ -23,9 +23,10 @@ public class EnemyController : MonoBehaviour
     public float exploringRange = 30; 
     public float idleTime = 4f;
 
+    [SerializeField] private int health = 3;
+
     private float idleTimer = 0f;
     private bool canDealDamage;
-    private int health = 3;
     private bool dead;
 
     private void Awake()
