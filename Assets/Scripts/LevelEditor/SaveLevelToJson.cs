@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEditor;
 
-
+#if UNITY_EDITOR
 public class SaveLevelToJson: MonoBehaviour
 {
     [SerializeField] GameObject enemiesHolder;
@@ -299,3 +299,4 @@ public class SaveLevelToJson: MonoBehaviour
         Debug.Log("Saved world to: " + worldDataPath + "enemiesJSON.json");
     }
 }
+#endif

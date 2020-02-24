@@ -10,8 +10,10 @@ public class WorldChunk : MonoBehaviour
 
     public IEnumerator loadCorourtine;
 
-    public static List<Bounds> activeChunkBounds = new List<Bounds>();
+    GameObject terrainHolder;
+    GameObject objectsHolder;
 
+    public static List<Bounds> activeChunkBounds = new List<Bounds>();
     Bounds chunkBoundary;
 
     List<GameObject> objectsInChunk;
@@ -25,6 +27,9 @@ public class WorldChunk : MonoBehaviour
         objectsInChunk = new List<GameObject>();
 
         chunkBoundary = GetChunkBounds();
+
+        terrainHolder = transform.Find("TerrainHolder").gameObject;
+        objectsHolder = transform.Find("ObjectsHolder").gameObject;
     }
 
     public void FindObjectsInChunk()
@@ -40,7 +45,7 @@ public class WorldChunk : MonoBehaviour
     public void SetTerrain(GameObject newTerrainObject)
     {
         terrainObject = newTerrainObject;
-        terrainObject.transform.SetParent(this.transform);
+        terrainObject.transform.SetParent(terrainHolder.transform);
         terrainObject.transform.localPosition = new Vector3(-size.x / 2, 0, -size.z / 2);
     }
 
@@ -66,7 +71,7 @@ public class WorldChunk : MonoBehaviour
     public void SetChunkLoaded(bool loaded)
     {
         isLoaded = loaded;
-        this.gameObject.SetActive(loaded);
+        objectsHolder.SetActive(loaded);
     }
 
     public bool IsChunkLoaded()
@@ -76,7 +81,7 @@ public class WorldChunk : MonoBehaviour
 
     public void AddObject(GameObject newObject)
     {
-        newObject.transform.SetParent(this.transform);
+        newObject.transform.SetParent(objectsHolder.transform);
         objectsInChunk.Add(newObject);
     }
 

@@ -26,7 +26,7 @@ ModelImporter:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: lambert1
-    second: {fileID: 2100000, guid: 4f4c4104bd44bce4c853bd518b424687, type: 2}
+    second: {fileID: 2100000, guid: 15fee1c34e478c147a5f30b60db7ae66, type: 2}
   materials:
     importMaterials: 1
     materialName: 0
@@ -114,5 +114,5 @@ ModelImporter:
   humanoidOversampling: 1
   additionalBone: 0
   userData: 
-  assetBundleName: 
+  assetBundleName: world
   assetBundleVariant: 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
+#if UNITY_EDITOR
 [CustomEditor(typeof(SaveLevelToFile))]
 public class LevelEditorButtons : Editor
 {
@@ -42,3 +43,4 @@ public class LevelEditorButtonsExtra : Editor
         }
     }
 }
+#endif

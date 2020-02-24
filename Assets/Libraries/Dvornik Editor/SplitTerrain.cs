@@ -11,6 +11,7 @@ using System.Collections.Generic;
 /// <summary>
 /// Split terrain.
 /// </summary>
+#if UNITY_EDITOR
 public class SplitTerrain : EditorWindow {
 		
 	string num = "4";
@@ -523,23 +524,14 @@ public class SplitTerrain : EditorWindow {
 		}
 		
 		EditorUtility.ClearProgressBar();
-				
-		
-		
 	}
 	
 	void OnGUI()
-    {
-					
+    {		
 		if(GUILayout.Button("Split terrain"))
         {			
-			
 			SplitIt();							
-		}
-			
-													
+		}										
 	}
-	
-		
-	
 }
+#endif

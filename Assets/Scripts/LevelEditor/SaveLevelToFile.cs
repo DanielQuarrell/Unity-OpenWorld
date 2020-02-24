@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEditor;
 
-
+#if UNITY_EDITOR
 public class SaveLevelToFile: MonoBehaviour
 {
     [SerializeField] GameObject enemiesHolder;
@@ -204,6 +204,7 @@ public class SaveLevelToFile: MonoBehaviour
 
             Mesh mesh = chunkObject.GetComponent<MeshFilter>().sharedMesh;
 
+            
             if (AssetDatabase.IsSubAsset(mesh.GetInstanceID()) && chunkObject.transform.parent.name != "Chunk")
             {
                 string modelString = chunkObject.transform.parent.name;
@@ -300,3 +301,4 @@ public class SaveLevelToFile: MonoBehaviour
         Debug.Log("Saved enemies to: " + worldDataPath + "enemiesData.dat");
     }
 }
+#endif
