@@ -25,6 +25,13 @@ public class WorldChunkLoader : MonoBehaviour
         {
             chunk.SetChunkLoaded(false);
         }
+
+        //Load files from binary
+        BinaryFormatter bf = new BinaryFormatter();
+
+        FileStream worldFile = File.Open(Application.persistentDataPath + "/worldData.dat", FileMode.Open);
+        WorldData worldData = (WorldData)bf.Deserialize(worldFile);
+        worldFile.Close();
     }
 
     void Update()

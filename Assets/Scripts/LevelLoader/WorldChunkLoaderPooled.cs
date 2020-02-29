@@ -3,14 +3,27 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Linq;
 
-public class WorldChunkLoaderAssetBundles : MonoBehaviour
+public class LoadedAssets
+{
+    public Mesh[] meshes;
+    public Material[] materials;
+    public Texture2D[] textures;
+    public GameObject[] prefabs;
+}
+
+public class WorldChunkLoaderPooled : MonoBehaviour
 {
     [SerializeField] GameObject player;
     [SerializeField] WorldChunk[] chunks;
     [SerializeField] GameObject enemiesHolder;
 
     [SerializeField] float distanceToLoadChunk = 100;
+
+    [SerializeField] WorldObjectPool worldObjectPool;
+
+    private LoadedAssets loadedAssets;
 
     private List<EnemyController> loadedEnemies;
 
@@ -20,6 +33,8 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
 
     private void Awake()
     {
+        loadedAssets = new LoadedAssets();
+
         loadedEnemies = new List<EnemyController>();
     }
 
@@ -142,7 +157,7 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
         }
 
         //Remove loaded objects
-        chunk.Unload();
+        chunk.Unload(ref worldObjectPool);
     }
 
     bool IsEnemyLoaded(int id)
@@ -227,9 +242,7 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
             TerrainLayer terrainLayer = new TerrainLayer();
 
             //Load Texture
-            AssetBundleRequest diffuseTextureRequest = worldAssetBundle.LoadAssetAsync<Texture2D>(terrainLayerData.diffuseTexture);
-            yield return new WaitWhile(() => diffuseTextureRequest.isDone == false);
-            terrainLayer.diffuseTexture = diffuseTextureRequest.asset as Texture2D;
+            terrainLayer.diffuseTexture = loadedAssets.textures.FirstOrDefault(t => t.name == terrainLayerData.diffuseTexture);
 
             //Set size and offset
             terrainLayer.tileSize = terrainLayerData.size.vector2;
@@ -259,9 +272,7 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
         terrainData.SetAlphamaps(0, 0, maps);
 
         //Set Materials
-        AssetBundleRequest materialRequest = worldAssetBundle.LoadAssetAsync<Material>("terrain_standard");
-        yield return new WaitWhile(() => materialRequest.isDone == false);
-        terrainObject.GetComponent<Terrain>().materialTemplate = materialRequest.asset as Material;
+        terrainObject.GetComponent<Terrain>().materialTemplate = loadedAssets.materials.FirstOrDefault(m => m.name == "terrain_standard");
 
         //Connect terrain pieces
         terrainObject.GetComponent<Terrain>().allowAutoConnect = true;
@@ -282,64 +293,39 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
     IEnumerator LoadWorldObject(WorldChunk chunk, WorldObjectData worldObjectData, Transform parent)
     {
         //Create object to place in the world
-        GameObject worldObject;
-        worldObject = new GameObject(worldObjectData.objectName);
-        worldObject.isStatic = worldObjectData.isStatic;
+        GameObject worldObject = worldObjectPool.GetNewWorldObject();
 
         //Load mesh if it has one
         if (worldObjectData.hasModel)
         {
-            worldObject.AddComponent<MeshFilter>();
-            worldObject.AddComponent<MeshRenderer>();
-            worldObject.AddComponent<MeshCollider>();
-
-            //Load main and sub Meshes
+            //Load mesh
             Mesh mesh = new Mesh();
 
-            Mesh[] subMeshes = worldAssetBundle.LoadAssetWithSubAssets<Mesh>(worldObjectData.model);
-
-            if (subMeshes != null)
-            {
-                for (int i = 0; i < subMeshes.Length; i++)
-                {
-                    if (subMeshes[i].name == worldObjectData.mesh)
-                    {
-                        mesh = subMeshes[i];
-                    }
-                }
-            }
-
-            //If child object not a submesh
-            if (mesh.vertexCount == 0)
-            {
-                AssetBundleRequest meshRequest = worldAssetBundle.LoadAssetAsync<Mesh>(worldObjectData.mesh);
-                yield return new WaitWhile(() => meshRequest.isDone == false);
-                mesh = meshRequest.asset as Mesh;
-            }
+            mesh = loadedAssets.meshes.FirstOrDefault(m => m.name == worldObjectData.mesh);
 
             //Load and apply materials
             List<Material> objectMaterials = new List<Material>();
             for (int i = 0; i < worldObjectData.materials.Count; i++)
             {
-                AssetBundleRequest materialRequest = worldAssetBundle.LoadAssetAsync<Material>(worldObjectData.materials[i]);
-                yield return new WaitWhile(() => materialRequest.isDone == false);
-                Material material = materialRequest.asset as Material;
+                Material material = loadedAssets.materials.FirstOrDefault(m => m.name == worldObjectData.materials[i]);
 
                 objectMaterials.Add(material);
             }
+
+            worldObject.GetComponent<MeshCollider>().enabled = true;
+            worldObject.GetComponent<MeshRenderer>().enabled = true;
 
             worldObject.GetComponent<MeshFilter>().sharedMesh = mesh;
             worldObject.GetComponent<MeshCollider>().sharedMesh = mesh;
             worldObject.GetComponent<MeshRenderer>().sharedMaterials = objectMaterials.ToArray();
 
             //Add it as a source tag for the navMesh
-            worldObject.AddComponent<NavMeshSourceTag>();
         }
 
         //Add nav mesh obstacles for lakes
         if (worldObjectData.isNavMeshObstacle)
         {
-            worldObject.AddComponent<UnityEngine.AI.NavMeshObstacle>();
+            worldObject.GetComponent<UnityEngine.AI.NavMeshObstacle>().enabled = true;
             worldObject.GetComponent<UnityEngine.AI.NavMeshObstacle>().size = worldObjectData.size.vector3;
             worldObject.GetComponent<UnityEngine.AI.NavMeshObstacle>().center = worldObjectData.center.vector3;
             worldObject.GetComponent<UnityEngine.AI.NavMeshObstacle>().carving = true;
@@ -389,7 +375,7 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
         //Load enemy prefab
         AssetBundleRequest request = enemyAssetBundle.LoadAssetAsync<GameObject>(enemyData.prefabName);
         yield return new WaitWhile(() => request.isDone == false);
-        GameObject enemyObject = Instantiate(request.asset as GameObject, enemiesHolder.transform);
+        GameObject enemyObject = Instantiate(loadedAssets.prefabs.FirstOrDefault(m => m.name == enemyData.prefabName), enemiesHolder.transform);
         EnemyController enemy = enemyObject.GetComponent<EnemyController>();
 
         enemy.id = enemyData.id;
@@ -433,6 +419,11 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
         AssetBundleCreateRequest resultEnemyAssetBundle = AssetBundle.LoadFromMemoryAsync(enemyBundleData);
         yield return new WaitWhile(() => resultEnemyAssetBundle.isDone == false);
         enemyAssetBundle = resultEnemyAssetBundle.assetBundle;
+
+        loadedAssets.meshes = worldAssetBundle.LoadAllAssets<Mesh>();
+        loadedAssets.materials = worldAssetBundle.LoadAllAssets<Material>();
+        loadedAssets.textures = worldAssetBundle.LoadAllAssets<Texture2D>();
+        loadedAssets.prefabs = enemyAssetBundle.LoadAllAssets<GameObject>();
 
         player.SetActive(true);
         assetBundlesLoaded = true;

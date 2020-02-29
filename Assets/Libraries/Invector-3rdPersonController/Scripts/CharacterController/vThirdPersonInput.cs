@@ -44,6 +44,7 @@ namespace Invector.vCharacterController
 
         public virtual void OnAnimatorMove()
         {
+            if(cc != null)
             cc.ControlAnimatorRootMotion(); // handle root motion animations 
         }
 

@@ -140,6 +140,20 @@ public class WorldChunk : MonoBehaviour
         SetChunkLoaded(false);
     }
 
+    public void Unload(ref WorldObjectPool worldObjectPool)
+    {
+        Destroy(terrainObject);
+
+        foreach (GameObject worldObject in objectsInChunk)
+        {
+            worldObjectPool.RemoveWorldObject(worldObject);
+        }
+
+        objectsInChunk.Clear();
+
+        SetChunkLoaded(false);
+    }
+
     public static Bounds GetWorldBounds()
     {
         float minX = Mathf.Infinity;
