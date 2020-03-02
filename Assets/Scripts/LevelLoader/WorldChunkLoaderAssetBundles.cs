@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading.Tasks;
 
 public class WorldChunkLoaderAssetBundles : MonoBehaviour
 {
@@ -18,6 +19,10 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
     private AssetBundle enemyAssetBundle = null;
     private bool assetBundlesLoaded;
 
+    bool loadingFile = false;
+
+    WorldData worldData;
+
     private void Awake()
     {
         loadedEnemies = new List<EnemyController>();
@@ -29,6 +34,12 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
         {
             chunk.SetChunkLoaded(false);
         }
+
+        BinaryFormatter bf = new BinaryFormatter();
+
+        FileStream worldFile = File.Open(Application.persistentDataPath + "/worldData.dat", FileMode.Open);
+        worldData = (WorldData)bf.Deserialize(worldFile);
+        worldFile.Close();
 
         player.SetActive(false);
 
@@ -50,7 +61,7 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
                     if (!chunk.IsChunkActive())
                     {
                         chunk.SetChunkActive(true);
-                        LoadChunk(chunk);
+                        StartCoroutine(LoadChunk(chunk));
                     }
                 }
                 else
@@ -65,16 +76,19 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
         }
     }
 
-    void LoadChunk(WorldChunk chunk)
+    IEnumerator LoadChunk(WorldChunk chunk)
     {
-        if (File.Exists(Application.persistentDataPath + "/worldData.dat") && File.Exists(Application.persistentDataPath + "/enemiesData.dat"))
+        yield return LoadChunkFromFileAsync(chunk).AsIEnumerator();
+    }
+
+    private async Task LoadChunkFromFileAsync(WorldChunk chunk)
+    {
+        if (File.Exists(Application.persistentDataPath + "/enemiesData.dat"))
         {
             //Load files from binary
             BinaryFormatter bf = new BinaryFormatter();
 
-            FileStream worldFile = File.Open(Application.persistentDataPath + "/worldData.dat", FileMode.Open);
-            WorldData worldData = (WorldData)bf.Deserialize(worldFile);
-            worldFile.Close();
+            worldData = await DeserialiseWorldFile(bf);
 
             FileStream enemiesFile = File.Open(Application.persistentDataPath + "/enemiesData.dat", FileMode.Open);
             WorldEnemyData worldEnemyData = (WorldEnemyData)bf.Deserialize(enemiesFile);
@@ -89,6 +103,26 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
                 }
             }
         }
+    }
+
+    private async Task<WorldData> DeserialiseWorldFile(BinaryFormatter bf)
+    {
+        string persistantDataPath = Application.persistentDataPath;
+
+        if (!loadingFile)
+        {
+            loadingFile = true;
+
+            await Task.Run(() =>
+            {
+                FileStream worldFile = File.Open(persistantDataPath + "/worldData.dat", FileMode.Open);
+                WorldData worldData = (WorldData)bf.Deserialize(worldFile);
+                worldFile.Close();
+                loadingFile = false;
+            });
+        }
+
+        return worldData;
     }
 
     void UnloadChunk(WorldChunk chunk)
