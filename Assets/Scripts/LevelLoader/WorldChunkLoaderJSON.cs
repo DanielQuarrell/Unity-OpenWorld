@@ -7,7 +7,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 public class WorldChunkLoaderJSON : MonoBehaviour
 {
     [SerializeField] GameObject player;
-    [SerializeField] WorldChunk[] chunks;
+    [SerializeField] WorldNode[] chunks;
     [SerializeField] GameObject enemiesHolder;
 
     [SerializeField] float distanceToLoadChunk = 100;
@@ -19,9 +19,17 @@ public class WorldChunkLoaderJSON : MonoBehaviour
         loadedEnemies = new List<EnemyController>();
     }
 
+    private void Start()
+    {
+        foreach (WorldNode chunk in chunks)
+        {
+            chunk.SetChunkLoaded(false);
+        }
+    }
+
     void Update()
     {
-        foreach (WorldChunk chunk in chunks)
+        foreach (WorldNode chunk in chunks)
         {
             Vector3 vectorDistance = player.transform.position - chunk.transform.position;
             vectorDistance.y = 0;
@@ -42,17 +50,11 @@ public class WorldChunkLoaderJSON : MonoBehaviour
                     chunk.SetChunkActive(false);
                     UnloadChunk(chunk);
                 }
-                else
-                {
-                    //Check if chunk is loading
-                    //Stop the coroutine
-                    //Unload the chunk
-                }
             }
         }
     }
 
-    void LoadChunk(WorldChunk chunk)
+    void LoadChunk(WorldNode chunk)
     {
         if (File.Exists(Application.persistentDataPath + "/worldJSON.json") && File.Exists(Application.persistentDataPath + "/enemiesJSON.json"))
         {
@@ -67,15 +69,22 @@ public class WorldChunkLoaderJSON : MonoBehaviour
             {
                 if (chunkData.coordinate.vector2 == chunk.GetCoordinate())
                 {
-                    StartCoroutine(LoadChunkAsync(chunk, chunkData));
-                    StartCoroutine(LoadEnemies(chunk, worldEnemyData));
+                    chunk.loadCorourtine = LoadChunkAsync(chunk, chunkData, worldEnemyData);
+                    StartCoroutine(chunk.loadCorourtine);
                 }
             }
         }
     }
 
-    void UnloadChunk(WorldChunk chunk)
+    void UnloadChunk(WorldNode chunk)
     {
+        //If chunk hasn't finished loaded
+        if (!chunk.IsChunkLoaded() && chunk.loadCorourtine != null)
+        {
+            //Stop chunk loading
+            StopCoroutine(chunk.loadCorourtine);
+        }
+
         if (File.Exists(Application.persistentDataPath + "/enemiesJSON.json"))
         {
             //Load enemy file
@@ -145,7 +154,7 @@ public class WorldChunkLoaderJSON : MonoBehaviour
         }
     }
 
-    IEnumerator LoadChunkAsync(WorldChunk chunk, ChunkData chunkData)
+    IEnumerator LoadChunkAsync(WorldNode chunk, ChunkData chunkData, WorldEnemyData worldEnemyData)
     {
         yield return StartCoroutine(LoadTerrain(chunk, chunkData.terrainObject));
 
@@ -153,9 +162,13 @@ public class WorldChunkLoaderJSON : MonoBehaviour
         {
             yield return StartCoroutine(LoadWorldObject(chunk, worldObjectData, null));
         }
+
+        yield return StartCoroutine(LoadEnemies(chunk.GetCoordinate(), worldEnemyData));
+
+        chunk.SetChunkLoaded(true);
     }
 
-    IEnumerator LoadTerrain(WorldChunk chunk, TerrainObjectData terrainObjectData)
+    IEnumerator LoadTerrain(WorldNode chunk, TerrainObjectData terrainObjectData)
     {
         //Create new object to apply the terrain to
         GameObject terrainObject;
@@ -215,7 +228,7 @@ public class WorldChunkLoaderJSON : MonoBehaviour
             {
                 for (int l = 0; l < terrainData.alphamapLayers; l++)
                 {
-                    maps[x, y, 0] = 1;
+                    maps[x, y, l] = 1;
                 }
             }
         }
@@ -243,7 +256,7 @@ public class WorldChunkLoaderJSON : MonoBehaviour
         yield return null;
     }
 
-    IEnumerator LoadWorldObject(WorldChunk chunk, WorldObjectData worldObjectData, Transform parent)
+    IEnumerator LoadWorldObject(WorldNode chunk, WorldObjectData worldObjectData, Transform parent)
     {
         //Create object to place in the world
         GameObject worldObject;
@@ -319,12 +332,12 @@ public class WorldChunkLoaderJSON : MonoBehaviour
         }
     }
 
-    IEnumerator LoadEnemies(WorldChunk chunk, WorldEnemyData worldEnemyData)
+    IEnumerator LoadEnemies(Vector2 chunkCoordinate, WorldEnemyData worldEnemyData)
     {
         //Find enemies in chunk
         foreach (EnemyData enemyData in worldEnemyData.enemies)
         {
-            if (enemyData.coordinate.vector2 == chunk.GetCoordinate())
+            if (enemyData.coordinate.vector2 == chunkCoordinate)
             {
                 //If the enemy is not loaded, then spawn the enemy
                 if (!IsEnemyLoaded(enemyData.id) && !enemyData.dead)

@@ -2,7 +2,7 @@
 using UnityEngine.AI;
 using System.Collections;
 using System.Collections.Generic;
-using NavMeshBuilder = UnityEngine.AI.NavMeshBuilder;
+using System.Threading.Tasks;
 
 //Build and update a localized navmesh from the sources marked by NavMeshSourceTag
 [DefaultExecutionOrder(-102)]
@@ -17,8 +17,9 @@ public class WorldNavMeshBuilder : MonoBehaviour
     {
         while (true)
         {
-            UpdateNavMesh(true);
-            yield return asyncOperation;
+            yield return UpdateNavMeshAsync().AsIEnumerator();
+
+            yield return new WaitWhile(() => asyncOperation.isDone == false);
             yield return new WaitForSeconds(1);
         }
     }
@@ -29,7 +30,7 @@ public class WorldNavMeshBuilder : MonoBehaviour
         navMesh = new NavMeshData();
         instance = NavMesh.AddNavMeshData(navMesh);
 
-        UpdateNavMesh(false);
+        UpdateNavMesh();
     }
 
     void OnDisable()
@@ -38,36 +39,36 @@ public class WorldNavMeshBuilder : MonoBehaviour
         instance.Remove();
     }
 
-    void UpdateNavMesh(bool asyncUpdate = false)
+    void UpdateNavMesh()
     {
-        if(asyncOperation != null)
-        {
-            if(!asyncOperation.isDone)
-            {
-                NavMeshBuilder.Cancel(navMesh);
-            }
-        }
-
         NavMeshSourceTag.Collect(ref sources);
 
         List<NavMeshBuildSource> navMeshSources = sources;
         NavMeshBuildSettings defaultBuildSettings = NavMesh.GetSettingsByID(0);
-        Bounds bounds = WorldChunk.GetWorldBounds();
+        Bounds bounds = WorldNode.GetWorldBounds();
 
-        if (asyncUpdate)
+        NavMeshBuilder.UpdateNavMeshData(navMesh, defaultBuildSettings, sources, bounds);
+    }
+
+    private async Task UpdateNavMeshAsync()
+    {
+        NavMeshSourceTag.Collect(ref sources);
+        List<NavMeshBuildSource> navMeshSources = sources;
+        NavMeshBuildSettings defaultBuildSettings = NavMesh.GetSettingsByID(0);
+        Bounds bounds = new Bounds();
+
+        await Task.Run(() =>
         {
-            asyncOperation = NavMeshBuilder.UpdateNavMeshDataAsync(navMesh, defaultBuildSettings, navMeshSources, bounds);
-        }
-        else
-        {
-            NavMeshBuilder.UpdateNavMeshData(navMesh, defaultBuildSettings, sources, bounds);
-        }
+            bounds = WorldNode.GetWorldBounds();
+        });
+
+        asyncOperation = NavMeshBuilder.UpdateNavMeshDataAsync(navMesh, defaultBuildSettings, navMeshSources, bounds);
     }
 
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.green;
-        Bounds bounds = WorldChunk.GetWorldBounds();
+        Bounds bounds = WorldNode.GetWorldBounds();
         Gizmos.DrawWireCube(bounds.center, bounds.size);
 
         Gizmos.color = Color.yellow;

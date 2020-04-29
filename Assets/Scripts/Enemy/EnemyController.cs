@@ -26,6 +26,7 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private int health = 3;
 
     private float idleTimer = 0f;
+    private float weaponRange = 2;
     private bool canDealDamage;
     private bool dead;
 
@@ -157,13 +158,13 @@ public class EnemyController : MonoBehaviour
             EnterIdle();
         }
 
-        if (DistanceFromPlayer() <= 2 && !animator.GetBool("Attacking") && !animator.GetBool("Hit"))
+        if (DistanceFromPlayer() <= weaponRange && !animator.GetBool("Attacking") && !animator.GetBool("Hit"))
         {
             agent.isStopped = true;
             animator.SetTrigger("Attack");
             canDealDamage = true;
         }
-        else if (DistanceFromPlayer() > 2)
+        else if (DistanceFromPlayer() > weaponRange)
         {
             if (agent.isStopped)
             {

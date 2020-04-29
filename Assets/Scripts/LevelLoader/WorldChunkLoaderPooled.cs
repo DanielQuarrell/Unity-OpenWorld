@@ -4,6 +4,7 @@ using System.IO;
 using UnityEngine;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Linq;
+using System.Threading.Tasks;
 
 public class LoadedAssets
 {
@@ -16,7 +17,7 @@ public class LoadedAssets
 public class WorldChunkLoaderPooled : MonoBehaviour
 {
     [SerializeField] GameObject player;
-    [SerializeField] WorldChunk[] chunks;
+    [SerializeField] WorldNode[] chunks;
     [SerializeField] GameObject enemiesHolder;
 
     [SerializeField] float distanceToLoadChunk = 100;
@@ -31,6 +32,8 @@ public class WorldChunkLoaderPooled : MonoBehaviour
     private AssetBundle enemyAssetBundle = null;
     private bool assetBundlesLoaded;
 
+    bool loadingFile = false;
+
     private void Awake()
     {
         loadedAssets = new LoadedAssets();
@@ -40,7 +43,7 @@ public class WorldChunkLoaderPooled : MonoBehaviour
 
     private void Start()
     {
-        foreach (WorldChunk chunk in chunks)
+        foreach (WorldNode chunk in chunks)
         {
             chunk.SetChunkLoaded(false);
         }
@@ -50,11 +53,22 @@ public class WorldChunkLoaderPooled : MonoBehaviour
         StartCoroutine(LoadAssetBundles());
     }
 
-    void Update()
+    private void LoadStartingChunks()
     {
-        if(assetBundlesLoaded)
+        if (File.Exists(Application.persistentDataPath + "/worldData.dat") && File.Exists(Application.persistentDataPath + "/enemiesData.dat"))
         {
-            foreach (WorldChunk chunk in chunks)
+            //Load files from binary
+            BinaryFormatter bf = new BinaryFormatter();
+
+            FileStream worldFile = File.Open(Application.persistentDataPath + "/worldData.dat", FileMode.Open);
+            WorldData worldData = (WorldData)bf.Deserialize(worldFile);
+            worldFile.Close();
+
+            FileStream enemiesFile = File.Open(Application.persistentDataPath + "/enemiesData.dat", FileMode.Open);
+            WorldEnemyData worldEnemyData = (WorldEnemyData)bf.Deserialize(enemiesFile);
+            enemiesFile.Close();
+
+            foreach (WorldNode chunk in chunks)
             {
                 Vector3 vectorDistance = player.transform.position - chunk.transform.position;
                 vectorDistance.y = 0;
@@ -65,7 +79,39 @@ public class WorldChunkLoaderPooled : MonoBehaviour
                     if (!chunk.IsChunkActive())
                     {
                         chunk.SetChunkActive(true);
-                        LoadChunk(chunk);
+
+                        foreach (ChunkData chunkData in worldData.chunks)
+                        {
+                            if (chunkData.coordinate.vector2 == chunk.GetCoordinate())
+                            {
+                                chunk.loadCorourtine = LoadChunkAsync(chunk, chunkData, worldEnemyData);
+                                StartCoroutine(chunk.loadCorourtine);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        player.SetActive(true);
+    }
+
+    void Update()
+    {
+        if(assetBundlesLoaded)
+        {
+            foreach (WorldNode chunk in chunks)
+            {
+                Vector3 vectorDistance = player.transform.position - chunk.transform.position;
+                vectorDistance.y = 0;
+                float distanceToPlayer = vectorDistance.magnitude;
+
+                if (distanceToPlayer < distanceToLoadChunk)
+                {
+                    if (!chunk.IsChunkActive())
+                    {
+                        chunk.SetChunkActive(true);
+                        StartCoroutine(LoadChunk(chunk));
                     }
                 }
                 else
@@ -80,16 +126,24 @@ public class WorldChunkLoaderPooled : MonoBehaviour
         }
     }
 
-    void LoadChunk(WorldChunk chunk)
+    IEnumerator LoadChunk(WorldNode chunk)
+    {
+        yield return LoadChunkFromFileAsync(chunk).AsIEnumerator();
+    }
+
+    private async Task LoadChunkFromFileAsync(WorldNode chunk)
     {
         if (File.Exists(Application.persistentDataPath + "/worldData.dat") && File.Exists(Application.persistentDataPath + "/enemiesData.dat"))
         {
             //Load files from binary
             BinaryFormatter bf = new BinaryFormatter();
 
-            FileStream worldFile = File.Open(Application.persistentDataPath + "/worldData.dat", FileMode.Open);
-            WorldData worldData = (WorldData)bf.Deserialize(worldFile);
-            worldFile.Close();
+            while (loadingFile)
+            {
+                await Task.Delay(25);
+            }
+
+            WorldData worldData = await DeserialiseWorldFileAsync(bf);
 
             FileStream enemiesFile = File.Open(Application.persistentDataPath + "/enemiesData.dat", FileMode.Open);
             WorldEnemyData worldEnemyData = (WorldEnemyData)bf.Deserialize(enemiesFile);
@@ -106,10 +160,31 @@ public class WorldChunkLoaderPooled : MonoBehaviour
         }
     }
 
-    void UnloadChunk(WorldChunk chunk)
+    private async Task<WorldData> DeserialiseWorldFileAsync(BinaryFormatter bf)
+    {
+        string persistantDataPath = Application.persistentDataPath;
+        WorldData worldData = new WorldData();
+
+        if (!loadingFile)
+        {
+            loadingFile = true;
+
+            await Task.Run(() =>
+            {
+                FileStream worldFile = File.Open(persistantDataPath + "/worldData.dat", FileMode.Open);
+                worldData = (WorldData)bf.Deserialize(worldFile);
+                worldFile.Close();
+                loadingFile = false;
+            });
+        }
+
+        return worldData;
+    }
+
+    void UnloadChunk(WorldNode chunk)
     {
         //If chunk hasn't finished loaded
-        if (!chunk.IsChunkLoaded())
+        if (!chunk.IsChunkLoaded() && chunk.loadCorourtine != null)
         {
             //Stop chunk loading
             StopCoroutine(chunk.loadCorourtine);
@@ -192,7 +267,7 @@ public class WorldChunkLoaderPooled : MonoBehaviour
         }
     }
 
-    IEnumerator LoadChunkAsync(WorldChunk chunk, ChunkData chunkData, WorldEnemyData worldEnemyData)
+    IEnumerator LoadChunkAsync(WorldNode chunk, ChunkData chunkData, WorldEnemyData worldEnemyData)
     {
         yield return StartCoroutine(LoadTerrain(chunk, chunkData.terrainObject));
 
@@ -206,7 +281,7 @@ public class WorldChunkLoaderPooled : MonoBehaviour
         chunk.SetChunkLoaded(true);
     }
 
-    IEnumerator LoadTerrain(WorldChunk chunk, TerrainObjectData terrainObjectData)
+    IEnumerator LoadTerrain(WorldNode chunk, TerrainObjectData terrainObjectData)
     {
         //Create new object to apply the terrain to
         GameObject terrainObject;
@@ -264,7 +339,7 @@ public class WorldChunkLoaderPooled : MonoBehaviour
             {
                 for (int l = 0; l < terrainData.alphamapLayers; l++)
                 {
-                    maps[x, y, 0] = 1;
+                    maps[x, y, l] = 1;
                 }
             }
         }
@@ -290,7 +365,7 @@ public class WorldChunkLoaderPooled : MonoBehaviour
         yield return null;
     }
 
-    IEnumerator LoadWorldObject(WorldChunk chunk, WorldObjectData worldObjectData, Transform parent)
+    IEnumerator LoadWorldObject(WorldNode chunk, WorldObjectData worldObjectData, Transform parent)
     {
         //Create object to place in the world
         GameObject worldObject = worldObjectPool.GetNewWorldObject();
@@ -373,8 +448,6 @@ public class WorldChunkLoaderPooled : MonoBehaviour
     IEnumerator LoadEnemy(EnemyData enemyData)
     {
         //Load enemy prefab
-        AssetBundleRequest request = enemyAssetBundle.LoadAssetAsync<GameObject>(enemyData.prefabName);
-        yield return new WaitWhile(() => request.isDone == false);
         GameObject enemyObject = Instantiate(loadedAssets.prefabs.FirstOrDefault(m => m.name == enemyData.prefabName), enemiesHolder.transform);
         EnemyController enemy = enemyObject.GetComponent<EnemyController>();
 
@@ -396,6 +469,8 @@ public class WorldChunkLoaderPooled : MonoBehaviour
 
         //Keep reference the all the loaded enemies in the scene
         loadedEnemies.Add(enemy);
+
+        yield return null;
     }
 
     private IEnumerator LoadAssetBundles()
@@ -425,22 +500,11 @@ public class WorldChunkLoaderPooled : MonoBehaviour
         loadedAssets.textures = worldAssetBundle.LoadAllAssets<Texture2D>();
         loadedAssets.prefabs = enemyAssetBundle.LoadAllAssets<GameObject>();
 
-        player.SetActive(true);
+        worldAssetBundle.Unload(false);
+        enemyAssetBundle.Unload(false);
+
         assetBundlesLoaded = true;
-    }
 
-    private void OnDestroy()
-    {
-        StopAllCoroutines();
-
-        if (worldAssetBundle != null)
-        {
-            worldAssetBundle.Unload(true);
-        }
-
-        if (enemyAssetBundle != null)
-        {
-            enemyAssetBundle.Unload(true);
-        }
+        LoadStartingChunks();
     }
 }

@@ -11,7 +11,7 @@ public class SaveLevelToJson: MonoBehaviour
 {
     [SerializeField] GameObject enemiesHolder;
     [SerializeField] GameObject world;
-    [SerializeField] List<WorldChunk> chunks;
+    [SerializeField] List<WorldNode> chunks;
     [SerializeField] List<EnemyController> enemies;
 
     WorldData worldData;
@@ -21,11 +21,11 @@ public class SaveLevelToJson: MonoBehaviour
     {
         foreach (Transform child in world.transform)
         {
-            if (child.GetComponent<WorldChunk>())
+            if (child.GetComponent<WorldNode>())
             {
-                if (!ChunkExists(child.GetComponent<WorldChunk>()))
+                if (!ChunkExists(child.GetComponent<WorldNode>()))
                 {
-                    chunks.Add(child.GetComponent<WorldChunk>());
+                    chunks.Add(child.GetComponent<WorldNode>());
                 }
             }
             else
@@ -48,9 +48,9 @@ public class SaveLevelToJson: MonoBehaviour
         AssignEnemiesToChunk();
     }
 
-    bool ChunkExists(WorldChunk newChunk)
+    bool ChunkExists(WorldNode newChunk)
     {
-        foreach (WorldChunk chunk in chunks)
+        foreach (WorldNode chunk in chunks)
         {
             if (newChunk == chunk)
             {
@@ -76,7 +76,7 @@ public class SaveLevelToJson: MonoBehaviour
 
     void CheckObjectInChunks(Transform worldObject)
     {
-        foreach (WorldChunk chunk in chunks)
+        foreach (WorldNode chunk in chunks)
         {
             chunk.FindObjectsInChunk();
 
@@ -91,7 +91,7 @@ public class SaveLevelToJson: MonoBehaviour
     {
         foreach (EnemyController enemy in enemies)
         {
-            foreach (WorldChunk chunk in chunks)
+            foreach (WorldNode chunk in chunks)
             {
                 if (chunk.ObjectInChunk(enemy.transform))
                 {
@@ -111,7 +111,7 @@ public class SaveLevelToJson: MonoBehaviour
 
         int enemyId = 0;
 
-        foreach (WorldChunk chunk in chunks)
+        foreach (WorldNode chunk in chunks)
         {
             ChunkData chunkData = new ChunkData();
             chunkData.coordinate = new SerializableVector2(chunk.GetCoordinate());

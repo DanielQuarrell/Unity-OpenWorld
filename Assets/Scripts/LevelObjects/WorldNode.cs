@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WorldChunk : MonoBehaviour
+public class WorldNode : MonoBehaviour
 {
     public Vector3 center = new Vector3(0.0f, 0.0f, 0.0f);
     public Vector3 size = new Vector3(32.0f, 100.0f, 32.0f);
@@ -184,8 +184,6 @@ public class WorldChunk : MonoBehaviour
             xChunkOffset = activeChunkBounds[0].size.x;
             zChunkOffset = activeChunkBounds[0].size.z;
         }
-
-        //Vector3 size = new Vector3(128, 100, 96);
 
         Vector3 size = new Vector3(maxX - minX + xChunkOffset, boundHeight, maxZ - minZ + zChunkOffset);
         Vector3 center = new Vector3((minX + maxX) * 0.5f, (minY + maxY) * 0.5f, (minZ + maxZ) * 0.5f);

@@ -5,7 +5,7 @@ using UnityEngine;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
 
-public class WorldChunkLoaderAssetBundles : MonoBehaviour
+public class WorldChunkLoaderResources : MonoBehaviour
 {
     [SerializeField] GameObject player;
     [SerializeField] WorldNode[] chunks;
@@ -14,10 +14,6 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
     [SerializeField] float distanceToLoadChunk = 100;
 
     private List<EnemyController> loadedEnemies;
-
-    private AssetBundle worldAssetBundle = null;
-    private AssetBundle enemyAssetBundle = null;
-    private bool assetBundlesLoaded;
 
     bool loadingFile = false;
 
@@ -35,7 +31,7 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
 
         player.SetActive(false);
 
-        StartCoroutine(LoadAssetBundles());
+        LoadStartingChunks();
     }
 
     private void LoadStartingChunks()
@@ -83,29 +79,26 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
 
     void Update()
     {
-        if(assetBundlesLoaded)
+        foreach (WorldNode chunk in chunks)
         {
-            foreach (WorldNode chunk in chunks)
-            {
-                Vector3 vectorDistance = player.transform.position - chunk.transform.position;
-                vectorDistance.y = 0;
-                float distanceToPlayer = vectorDistance.magnitude;
+            Vector3 vectorDistance = player.transform.position - chunk.transform.position;
+            vectorDistance.y = 0;
+            float distanceToPlayer = vectorDistance.magnitude;
 
-                if (distanceToPlayer < distanceToLoadChunk)
+            if (distanceToPlayer < distanceToLoadChunk)
+            {
+                if (!chunk.IsChunkActive())
                 {
-                    if (!chunk.IsChunkActive())
-                    {
-                        chunk.SetChunkActive(true);
-                        StartCoroutine(LoadChunk(chunk));
-                    }
+                    chunk.SetChunkActive(true);
+                    StartCoroutine(LoadChunk(chunk));
                 }
-                else
+            }
+            else
+            {
+                if (chunk.IsChunkActive())
                 {
-                    if (chunk.IsChunkActive())
-                    {
-                        chunk.SetChunkActive(false);
-                        UnloadChunk(chunk);
-                    }
+                    chunk.SetChunkActive(false);
+                    UnloadChunk(chunk);
                 }
             }
         }
@@ -169,7 +162,7 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
     void UnloadChunk(WorldNode chunk)
     {
         //If chunk hasn't finished loaded
-        if (!chunk.IsChunkLoaded() && chunk.loadCorourtine != null)
+        if(!chunk.IsChunkLoaded() && chunk.loadCorourtine != null)
         {
             //Stop chunk loading
             StopCoroutine(chunk.loadCorourtine);
@@ -190,7 +183,7 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
 
                 foreach (EnemyController enemy in loadedEnemies)
                 {
-                    if (chunk.ObjectInChunk(enemy.transform))
+                    if(chunk.ObjectInChunk(enemy.transform))
                     {
                         //Rewrite the enemy data with the loaded enemy
                         OverideEnemy(ref worldEnemyData, enemy, chunk.GetCoordinate());
@@ -224,7 +217,7 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
     {
         foreach (EnemyController loadedEnemy in loadedEnemies)
         {
-            if (loadedEnemy.id == id)
+            if(loadedEnemy.id == id)
             {
                 return true;
             }
@@ -238,7 +231,7 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
         //Ensure it rewrites the same enemy
         for (int i = 0; i < worldEnemyData.enemies.Count; i++)
         {
-            if (worldEnemyData.enemies[i].id == enemyInChunk.id)
+            if(worldEnemyData.enemies[i].id == enemyInChunk.id)
             {
                 worldEnemyData.enemies[i].coordinate = new SerializableVector2(coordinate);
 
@@ -302,7 +295,7 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
             TerrainLayer terrainLayer = new TerrainLayer();
 
             //Load Texture
-            AssetBundleRequest diffuseTextureRequest = worldAssetBundle.LoadAssetAsync<Texture2D>(terrainLayerData.diffuseTexture);
+            ResourceRequest diffuseTextureRequest = Resources.LoadAsync<Texture2D>("Textures/" + terrainLayerData.diffuseTexture);
             yield return new WaitWhile(() => diffuseTextureRequest.isDone == false);
             terrainLayer.diffuseTexture = diffuseTextureRequest.asset as Texture2D;
 
@@ -334,7 +327,7 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
         terrainData.SetAlphamaps(0, 0, maps);
 
         //Set Materials
-        AssetBundleRequest materialRequest = worldAssetBundle.LoadAssetAsync<Material>("terrain_standard");
+        ResourceRequest materialRequest = Resources.LoadAsync<Material>("Materials/terrain_standard");
         yield return new WaitWhile(() => materialRequest.isDone == false);
         terrainObject.GetComponent<Terrain>().materialTemplate = materialRequest.asset as Material;
 
@@ -362,7 +355,7 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
         worldObject.isStatic = worldObjectData.isStatic;
 
         //Load mesh if it has one
-        if (worldObjectData.hasModel)
+        if(worldObjectData.hasModel)
         {
             worldObject.AddComponent<MeshFilter>();
             worldObject.AddComponent<MeshRenderer>();
@@ -371,23 +364,18 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
             //Load main and sub Meshes
             Mesh mesh = new Mesh();
 
-            Mesh[] subMeshes = worldAssetBundle.LoadAssetWithSubAssets<Mesh>(worldObjectData.model);
-
-            if (subMeshes != null)
+            foreach (Mesh subMesh in Resources.LoadAll<Mesh>("3D_Models/" + worldObjectData.model))
             {
-                for (int i = 0; i < subMeshes.Length; i++)
+                if (subMesh.name == worldObjectData.mesh)
                 {
-                    if (subMeshes[i].name == worldObjectData.mesh)
-                    {
-                        mesh = subMeshes[i];
-                    }
+                    mesh = subMesh;
                 }
             }
 
             //If child object not a submesh
-            if (mesh.vertexCount == 0)
+            if(mesh.vertexCount == 0)
             {
-                AssetBundleRequest meshRequest = worldAssetBundle.LoadAssetAsync<Mesh>(worldObjectData.mesh);
+                ResourceRequest meshRequest = Resources.LoadAsync<Mesh>("3D_Models/" + worldObjectData.mesh);
                 yield return new WaitWhile(() => meshRequest.isDone == false);
                 mesh = meshRequest.asset as Mesh;
             }
@@ -396,7 +384,7 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
             List<Material> objectMaterials = new List<Material>();
             for (int i = 0; i < worldObjectData.materials.Count; i++)
             {
-                AssetBundleRequest materialRequest = worldAssetBundle.LoadAssetAsync<Material>(worldObjectData.materials[i]);
+                ResourceRequest materialRequest = Resources.LoadAsync<Material>("Materials/" + worldObjectData.materials[i]);
                 yield return new WaitWhile(() => materialRequest.isDone == false);
                 Material material = materialRequest.asset as Material;
 
@@ -412,7 +400,7 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
         }
 
         //Add nav mesh obstacles for lakes
-        if (worldObjectData.isNavMeshObstacle)
+        if(worldObjectData.isNavMeshObstacle)
         {
             worldObject.AddComponent<UnityEngine.AI.NavMeshObstacle>();
             worldObject.GetComponent<UnityEngine.AI.NavMeshObstacle>().size = worldObjectData.size.vector3;
@@ -431,7 +419,7 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
         worldObject.transform.rotation = worldObjectData.rotation.quaternion;
         worldObject.transform.localScale = worldObjectData.scale.vector3;
 
-        if (parent)
+        if(parent)
         {
             //Set object parent
             worldObject.transform.SetParent(parent);
@@ -462,7 +450,7 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
     IEnumerator LoadEnemy(EnemyData enemyData)
     {
         //Load enemy prefab
-        AssetBundleRequest request = enemyAssetBundle.LoadAssetAsync<GameObject>(enemyData.prefabName);
+        ResourceRequest request = Resources.LoadAsync<GameObject>("Enemies/" + enemyData.prefabName);
         yield return new WaitWhile(() => request.isDone == false);
         GameObject enemyObject = Instantiate(request.asset as GameObject, enemiesHolder.transform);
         EnemyController enemy = enemyObject.GetComponent<EnemyController>();
@@ -485,47 +473,5 @@ public class WorldChunkLoaderAssetBundles : MonoBehaviour
 
         //Keep reference the all the loaded enemies in the scene
         loadedEnemies.Add(enemy);
-    }
-
-    private IEnumerator LoadAssetBundles()
-    {
-        string worldBundlePath = "";
-#if UNITY_STANDALONE || UNITY_EDITOR
-        worldBundlePath = Application.streamingAssetsPath + "/StandaloneWindows/" + "world";
-#endif
-        byte[] worldBundleData = System.IO.File.ReadAllBytes(worldBundlePath);
-
-        AssetBundleCreateRequest resultWorldAssetBundle = AssetBundle.LoadFromMemoryAsync(worldBundleData);
-        yield return new WaitWhile(() => resultWorldAssetBundle.isDone == false);
-        worldAssetBundle = resultWorldAssetBundle.assetBundle;
-
-        string enemyBundlePath = "";
-#if UNITY_STANDALONE || UNITY_EDITOR
-        enemyBundlePath = Application.streamingAssetsPath + "/StandaloneWindows/" + "enemies";
-#endif
-        byte[] enemyBundleData = System.IO.File.ReadAllBytes(enemyBundlePath);
-
-        AssetBundleCreateRequest resultEnemyAssetBundle = AssetBundle.LoadFromMemoryAsync(enemyBundleData);
-        yield return new WaitWhile(() => resultEnemyAssetBundle.isDone == false);
-        enemyAssetBundle = resultEnemyAssetBundle.assetBundle;
-
-        assetBundlesLoaded = true;
-
-        LoadStartingChunks();
-    }
-
-    private void OnDestroy()
-    {
-        StopAllCoroutines();
-
-        if (worldAssetBundle != null)
-        {
-            worldAssetBundle.Unload(true);
-        }
-
-        if (enemyAssetBundle != null)
-        {
-            enemyAssetBundle.Unload(true);
-        }
     }
 }

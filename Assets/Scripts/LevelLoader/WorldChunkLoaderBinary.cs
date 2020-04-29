@@ -4,10 +4,10 @@ using System.IO;
 using UnityEngine;
 using System.Runtime.Serialization.Formatters.Binary;
 
-public class WorldChunkLoader : MonoBehaviour
+public class WorldChunkLoaderBinary : MonoBehaviour
 {
     [SerializeField] GameObject player;
-    [SerializeField] WorldChunk[] chunks;
+    [SerializeField] WorldNode[] chunks;
     [SerializeField] GameObject enemiesHolder;
 
     [SerializeField] float distanceToLoadChunk = 100;
@@ -21,22 +21,15 @@ public class WorldChunkLoader : MonoBehaviour
 
     private void Start()
     {
-        foreach (WorldChunk chunk in chunks)
+        foreach (WorldNode chunk in chunks)
         {
             chunk.SetChunkLoaded(false);
         }
-
-        //Load files from binary
-        BinaryFormatter bf = new BinaryFormatter();
-
-        FileStream worldFile = File.Open(Application.persistentDataPath + "/worldData.dat", FileMode.Open);
-        WorldData worldData = (WorldData)bf.Deserialize(worldFile);
-        worldFile.Close();
     }
 
     void Update()
     {
-        foreach (WorldChunk chunk in chunks)
+        foreach (WorldNode chunk in chunks)
         {
             Vector3 vectorDistance = player.transform.position - chunk.transform.position;
             vectorDistance.y = 0;
@@ -61,7 +54,7 @@ public class WorldChunkLoader : MonoBehaviour
         }
     }
 
-    void LoadChunk(WorldChunk chunk)
+    void LoadChunk(WorldNode chunk)
     {
         if (File.Exists(Application.persistentDataPath + "/worldData.dat") && File.Exists(Application.persistentDataPath + "/enemiesData.dat"))
         {
@@ -87,10 +80,10 @@ public class WorldChunkLoader : MonoBehaviour
         }
     }
 
-    void UnloadChunk(WorldChunk chunk)
+    void UnloadChunk(WorldNode chunk)
     {
         //If chunk hasn't finished loaded
-        if(!chunk.IsChunkLoaded())
+        if (!chunk.IsChunkLoaded() && chunk.loadCorourtine != null)
         {
             //Stop chunk loading
             StopCoroutine(chunk.loadCorourtine);
@@ -111,7 +104,7 @@ public class WorldChunkLoader : MonoBehaviour
 
                 foreach (EnemyController enemy in loadedEnemies)
                 {
-                    if(chunk.ObjectInChunk(enemy.transform))
+                    if (chunk.ObjectInChunk(enemy.transform))
                     {
                         //Rewrite the enemy data with the loaded enemy
                         OverideEnemy(ref worldEnemyData, enemy, chunk.GetCoordinate());
@@ -145,7 +138,7 @@ public class WorldChunkLoader : MonoBehaviour
     {
         foreach (EnemyController loadedEnemy in loadedEnemies)
         {
-            if(loadedEnemy.id == id)
+            if (loadedEnemy.id == id)
             {
                 return true;
             }
@@ -159,7 +152,7 @@ public class WorldChunkLoader : MonoBehaviour
         //Ensure it rewrites the same enemy
         for (int i = 0; i < worldEnemyData.enemies.Count; i++)
         {
-            if(worldEnemyData.enemies[i].id == enemyInChunk.id)
+            if (worldEnemyData.enemies[i].id == enemyInChunk.id)
             {
                 worldEnemyData.enemies[i].coordinate = new SerializableVector2(coordinate);
 
@@ -173,7 +166,7 @@ public class WorldChunkLoader : MonoBehaviour
         }
     }
 
-    IEnumerator LoadChunkAsync(WorldChunk chunk, ChunkData chunkData, WorldEnemyData worldEnemyData)
+    IEnumerator LoadChunkAsync(WorldNode chunk, ChunkData chunkData, WorldEnemyData worldEnemyData)
     {
         yield return StartCoroutine(LoadTerrain(chunk, chunkData.terrainObject));
 
@@ -187,7 +180,7 @@ public class WorldChunkLoader : MonoBehaviour
         chunk.SetChunkLoaded(true);
     }
 
-    IEnumerator LoadTerrain(WorldChunk chunk, TerrainObjectData terrainObjectData)
+    IEnumerator LoadTerrain(WorldNode chunk, TerrainObjectData terrainObjectData)
     {
         //Create new object to apply the terrain to
         GameObject terrainObject;
@@ -247,7 +240,7 @@ public class WorldChunkLoader : MonoBehaviour
             {
                 for (int l = 0; l < terrainData.alphamapLayers; l++)
                 {
-                    maps[x, y, 0] = 1;
+                    maps[x, y, l] = 1;
                 }
             }
         }
@@ -275,7 +268,7 @@ public class WorldChunkLoader : MonoBehaviour
         yield return null;
     }
 
-    IEnumerator LoadWorldObject(WorldChunk chunk, WorldObjectData worldObjectData, Transform parent)
+    IEnumerator LoadWorldObject(WorldNode chunk, WorldObjectData worldObjectData, Transform parent)
     {
         //Create object to place in the world
         GameObject worldObject;
@@ -283,7 +276,7 @@ public class WorldChunkLoader : MonoBehaviour
         worldObject.isStatic = worldObjectData.isStatic;
 
         //Load mesh if it has one
-        if(worldObjectData.hasModel)
+        if (worldObjectData.hasModel)
         {
             worldObject.AddComponent<MeshFilter>();
             worldObject.AddComponent<MeshRenderer>();
@@ -301,7 +294,7 @@ public class WorldChunkLoader : MonoBehaviour
             }
 
             //If child object not a submesh
-            if(mesh.vertexCount == 0)
+            if (mesh.vertexCount == 0)
             {
                 ResourceRequest meshRequest = Resources.LoadAsync<Mesh>("3D_Models/" + worldObjectData.mesh);
                 yield return new WaitWhile(() => meshRequest.isDone == false);
@@ -328,7 +321,7 @@ public class WorldChunkLoader : MonoBehaviour
         }
 
         //Add nav mesh obstacles for lakes
-        if(worldObjectData.isNavMeshObstacle)
+        if (worldObjectData.isNavMeshObstacle)
         {
             worldObject.AddComponent<UnityEngine.AI.NavMeshObstacle>();
             worldObject.GetComponent<UnityEngine.AI.NavMeshObstacle>().size = worldObjectData.size.vector3;
@@ -347,7 +340,7 @@ public class WorldChunkLoader : MonoBehaviour
         worldObject.transform.rotation = worldObjectData.rotation.quaternion;
         worldObject.transform.localScale = worldObjectData.scale.vector3;
 
-        if(parent)
+        if (parent)
         {
             //Set object parent
             worldObject.transform.SetParent(parent);
@@ -403,3 +396,4 @@ public class WorldChunkLoader : MonoBehaviour
         loadedEnemies.Add(enemy);
     }
 }
+

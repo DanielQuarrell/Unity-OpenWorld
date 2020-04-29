@@ -15,7 +15,7 @@ RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 9
   m_Fog: 1
-  m_FogColor: {r: 0.43529412, g: 0.43529412, b: 0.43529412, a: 1}
+  m_FogColor: {r: 0.5283019, g: 0.5208259, b: 0.5208259, a: 1}
   m_FogMode: 3
   m_FogDensity: 0.04
   m_LinearFogStart: 0
@@ -22072,7 +22072,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &556023159
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -52249,6 +52249,7 @@ GameObject:
   - component: {fileID: 1362344879}
   - component: {fileID: 1362344876}
   - component: {fileID: 1362344877}
+  - component: {fileID: 1362344880}
   m_Layer: 0
   m_Name: World 8x8
   m_TagString: Untagged
@@ -52719,6 +52720,86 @@ MonoBehaviour:
   enemiesHolder: {fileID: 2026697617}
   distanceToLoadChunk: 75
   worldObjectPool: {fileID: 705178816}
+--- !u!114 &1362344880
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1362344874}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 361fc4410a244224f89546bbd51b7326, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  player: {fileID: 875756307}
+  chunks:
+  - {fileID: 278926878}
+  - {fileID: 1527274796}
+  - {fileID: 1452713398}
+  - {fileID: 583750636}
+  - {fileID: 944767546}
+  - {fileID: 1192506335}
+  - {fileID: 620089708}
+  - {fileID: 1770701063}
+  - {fileID: 613592879}
+  - {fileID: 1119396238}
+  - {fileID: 806061209}
+  - {fileID: 402938959}
+  - {fileID: 1601965709}
+  - {fileID: 1793243779}
+  - {fileID: 781764391}
+  - {fileID: 1726977484}
+  - {fileID: 1842962864}
+  - {fileID: 1964900426}
+  - {fileID: 818546445}
+  - {fileID: 1353220846}
+  - {fileID: 407931699}
+  - {fileID: 36863039}
+  - {fileID: 160101015}
+  - {fileID: 492971198}
+  - {fileID: 1609146766}
+  - {fileID: 1247898516}
+  - {fileID: 218832443}
+  - {fileID: 780538713}
+  - {fileID: 645052586}
+  - {fileID: 1761887261}
+  - {fileID: 89969264}
+  - {fileID: 2005906140}
+  - {fileID: 1679360903}
+  - {fileID: 1726930343}
+  - {fileID: 914565125}
+  - {fileID: 2078856495}
+  - {fileID: 1180650097}
+  - {fileID: 1866712848}
+  - {fileID: 829905088}
+  - {fileID: 2071222582}
+  - {fileID: 1221542275}
+  - {fileID: 589530528}
+  - {fileID: 1042325646}
+  - {fileID: 808647455}
+  - {fileID: 1668003380}
+  - {fileID: 1994310880}
+  - {fileID: 91768602}
+  - {fileID: 240886257}
+  - {fileID: 1224202201}
+  - {fileID: 1218600668}
+  - {fileID: 1650603220}
+  - {fileID: 763574307}
+  - {fileID: 1574808417}
+  - {fileID: 470189993}
+  - {fileID: 1563395918}
+  - {fileID: 1547219549}
+  - {fileID: 138025520}
+  - {fileID: 871559925}
+  - {fileID: 841444941}
+  - {fileID: 1131310647}
+  - {fileID: 460378123}
+  - {fileID: 873019436}
+  - {fileID: 16756311}
+  - {fileID: 228716373}
+  enemiesHolder: {fileID: 2026697617}
+  distanceToLoadChunk: 75
 --- !u!1 &1371681524
 GameObject:
   m_ObjectHideFlags: 0
@@ -78725,17 +78806,17 @@ PrefabInstance:
     - target: {fileID: 7208575699942887144, guid: 345b0b95704e60449be74350a8e07a7f,
         type: 3}
       propertyPath: m_BackGroundColor.r
-      value: 0.4339623
+      value: 0.5294118
       objectReference: {fileID: 0}
     - target: {fileID: 7208575699942887144, guid: 345b0b95704e60449be74350a8e07a7f,
         type: 3}
       propertyPath: m_BackGroundColor.g
-      value: 0.4339623
+      value: 0.52156866
       objectReference: {fileID: 0}
     - target: {fileID: 7208575699942887144, guid: 345b0b95704e60449be74350a8e07a7f,
         type: 3}
       propertyPath: m_BackGroundColor.b
-      value: 0.4339623
+      value: 0.52156866
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 345b0b95704e60449be74350a8e07a7f, type: 3}
